@@ -64,6 +64,11 @@ class Product extends Model
     {
         return $this->belongsTo(Unit::class);
     }
+
+    public function recipes()
+    {
+        return $this->hasMany(\App\Models\Recipe::class);
+    }
     public function scopeActive($query)
     {
         return $query->where('status', 1);
