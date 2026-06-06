@@ -70,6 +70,10 @@ class ProductController extends Controller
   <a class="dropdown-item" href="' . route('backend.admin.purchase.create', ['barcode' => $data->sku]) . '">
                 <i class="fas fa-cart-plus"></i> Purchase
             </a>
+<div class="dropdown-divider"></div>
+  <a class="dropdown-item" href="' . route('backend.admin.products.recipes', $data->id) . '">
+    <i class="fas fa-scroll"></i> Manage Recipe
+  </a>
                     </div>
                   </div>';
                 })
