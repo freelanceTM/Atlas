@@ -16,25 +16,14 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check()) {
-            return $next($request);
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You are not logged in');
         }
-        return redirect()->route('login')->with('error', 'You are not an Admin');
+
+        if (!Auth::user()->hasRole('Admin')) {
+            abort(403, 'Access denied. Admin role required.');
+        }
+
+        return $next($request);
     }
 }
-
-
-
-
-//         if (Auth::check()) {
-//             if (Auth::user()->type == 'Admin') {
-//                 return $next($request);
-//             } else {
-//                 Auth::logout();
-//                 return redirect()->route('login')->with('error', 'You are not an Admin');
-//             }
-//         } else {
-//             return redirect()->route('login')->with('error', 'You are not logged in');
-//         }
-//     }
-// }
