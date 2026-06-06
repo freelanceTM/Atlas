@@ -44,9 +44,9 @@ class ProductSeeder extends Seeder
                 'discount' => $faker->numberBetween(0, 100),
                 'discount_type' => $faker->randomElement(['fixed', 'percentage']),
                 'purchase_price' => $faker->numberBetween(1, 900),
-                'quantity' => 0,
+                'quantity' => $faker->numberBetween(10, 200),
                 'expire_date' => $faker->dateTimeBetween('now', '+1 year'),
-                'status' => $faker->boolean() ? 1 : 0,
+                'status' => 1,
             ]);
         }
     }
