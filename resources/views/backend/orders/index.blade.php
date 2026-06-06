@@ -1,6 +1,6 @@
 @extends('backend.master')
 
-@section('title', 'Sale')
+@section('title', 'Orders')
 
 @section('content')
 <div class="card">
@@ -12,9 +12,10 @@
             <thead>
               <tr>
                 <th data-orderable="false">#</th>
-                <th>SaleId</th>
+                <th>Sale ID</th>
                 <th>Customer</th>
-                <th>Item</th>
+                <th>Items</th>
+                <th>Type</th>
                 <th>Sub Total {{currency()->symbol??''}}</th>
                 <th>Discount {{currency()->symbol??''}}</th>
                 <th>Total {{currency()->symbol??''}}</th>
@@ -33,64 +34,29 @@
 @endsection
 
 @push('script')
-
 <script type="text/javascript">
   $(function() {
     let table = $('#datatables').DataTable({
       processing: true,
       serverSide: true,
       ordering: true,
-      order: [
-        [1, 'desc']
-      ],
+      order: [[1, 'desc']],
       ajax: {
         url: "{{ route('backend.admin.orders.index') }}"
       },
-
-      columns: [{
-          data: 'DT_RowIndex',
-          name: 'DT_RowIndex'
-        },
-        {
-          data: 'saleId',
-          name: 'saleId'
-        },
-        {
-          data: 'customer',
-          name: 'customer'
-        },
-        {
-          data: 'item',
-          name: 'item'
-        },
-        {
-          data: 'sub_total',
-          name: 'sub_total'
-        },
-        {
-          data: 'discount',
-          name: 'discount'
-        },
-        {
-          data: 'total',
-          name: 'total'
-        }, 
-         {
-          data: 'paid',
-          name: 'paid'
-        },
-         {
-          data: 'due',
-          name: 'due'
-        },
-        {
-          data: 'status',
-          name: 'status'
-        },
-        {
-          data: 'action',
-          name: 'action'
-        },
+      columns: [
+        { data: 'DT_RowIndex', name: 'DT_RowIndex' },
+        { data: 'saleId',      name: 'saleId' },
+        { data: 'customer',    name: 'customer' },
+        { data: 'item',        name: 'item' },
+        { data: 'order_type',  name: 'order_type' },
+        { data: 'sub_total',   name: 'sub_total' },
+        { data: 'discount',    name: 'discount' },
+        { data: 'total',       name: 'total' },
+        { data: 'paid',        name: 'paid' },
+        { data: 'due',         name: 'due' },
+        { data: 'status',      name: 'status' },
+        { data: 'action',      name: 'action' },
       ]
     });
   });
