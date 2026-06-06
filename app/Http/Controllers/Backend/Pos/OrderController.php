@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Backend\Pos;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ingredient;
 use App\Models\Order;
 use App\Models\OrderTransaction;
 use App\Models\PosCart;
 use App\Models\Product;
+use App\Models\Recipe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
@@ -57,25 +59,10 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'customer_id' => [
-                'required',
-                'exists:customers,id',
-                'integer',
-            ],
-            'order_discount' => [
-                'nullable',
-                'numeric',
-                'min:0',
-            ],
-            'paid' => [
-                'nullable',
-                'numeric',
-                'min:0',
-            ],
-            'order_type' => [
-                'nullable',
-                'in:takeaway,dine_in',
-            ],
+            'customer_id'    => ['required', 'exists:customers,id', 'integer'],
+            'order_discount' => ['nullable', 'numeric', 'min:0'],
+            'paid'           => ['nullable', 'numeric', 'min:0'],
+            'order_type'     => ['nullable', 'in:takeaway,dine_in'],
         ], [
             'customer_id.required'   => 'Please select a customer.',
             'customer_id.exists'     => 'The selected customer does not exist.',
@@ -91,23 +78,57 @@ class OrderController extends Controller
         }
 
         $order = DB::transaction(function () use ($request, $carts) {
-            // Lock all products to prevent race conditions on concurrent checkouts
+
+            // ── 1. Lock products ──────────────────────────────────────────
             $productIds = $carts->pluck('product_id')->toArray();
             $products   = Product::whereIn('id', $productIds)
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
 
-            // Guard: verify stock before any mutation
+            // ── 2. Guard: product stock ───────────────────────────────────
             foreach ($carts as $cart) {
                 $product = $products[$cart->product_id] ?? null;
                 if (!$product || $product->quantity < $cart->quantity) {
                     throw new \Exception(
-                        'Insufficient stock for: ' . ($product->name ?? 'unknown product')
+                        'Insufficient product stock for: ' . ($product->name ?? 'unknown product')
                     );
                 }
             }
 
+            // ── 3. Calculate total ingredient requirements ────────────────
+            $ingredientRequired = [];
+            foreach ($carts as $cart) {
+                $recipes = Recipe::where('product_id', $cart->product_id)->get();
+                foreach ($recipes as $recipe) {
+                    $needed = $recipe->quantity * $cart->quantity;
+                    $ingredientRequired[$recipe->ingredient_id] =
+                        ($ingredientRequired[$recipe->ingredient_id] ?? 0) + $needed;
+                }
+            }
+
+            // ── 4. Lock and guard ingredient stock ────────────────────────
+            if (!empty($ingredientRequired)) {
+                $lockedIngredients = Ingredient::whereIn('id', array_keys($ingredientRequired))
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($ingredientRequired as $ingredientId => $needed) {
+                    $ingredient = $lockedIngredients[$ingredientId] ?? null;
+                    if (!$ingredient || $ingredient->stock < $needed) {
+                        throw new \Exception(
+                            'Insufficient ingredient: ' .
+                            ($ingredient->name ?? 'unknown') .
+                            ' (need ' . round($needed, 3) .
+                            ' ' . ($ingredient->unit ?? '') .
+                            ', have ' . round($ingredient->stock ?? 0, 3) . ')'
+                        );
+                    }
+                }
+            }
+
+            // ── 5. Create the order ───────────────────────────────────────
             $order = Order::create([
                 'customer_id' => $request->customer_id,
                 'user_id'     => $request->user()->id,
@@ -117,6 +138,7 @@ class OrderController extends Controller
             $totalAmountOrder = 0;
             $orderDiscount    = (float) ($request->order_discount ?? 0);
 
+            // ── 6. Create order lines + decrement product stock ───────────
             foreach ($carts as $cart) {
                 $product            = $products[$cart->product_id];
                 $mainTotal          = $product->price * $cart->quantity;
@@ -138,6 +160,12 @@ class OrderController extends Controller
                 Product::where('id', $product->id)->decrement('quantity', $cart->quantity);
             }
 
+            // ── 7. Deduct ingredients ─────────────────────────────────────
+            foreach ($ingredientRequired as $ingredientId => $needed) {
+                Ingredient::where('id', $ingredientId)->decrement('stock', $needed);
+            }
+
+            // ── 8. Finalize order totals ──────────────────────────────────
             $total = $totalAmountOrder - $orderDiscount;
             $paid  = (float) ($request->paid ?? 0);
             $due   = $total - $paid;
@@ -191,7 +219,6 @@ class OrderController extends Controller
             ]);
 
             $orderTransaction = DB::transaction(function () use ($order, $data) {
-                // Re-fetch with lock to prevent concurrent double-payments
                 $locked = Order::where('id', $order->id)->lockForUpdate()->firstOrFail();
 
                 if ($data['amount'] > $locked->due) {
