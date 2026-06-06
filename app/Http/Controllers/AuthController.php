@@ -302,10 +302,16 @@ class AuthController extends Controller
 
     public function redirectUser()
     {
-        if (Auth::check()) {
-            return redirect()->route('backend.admin.dashboard');
-        } else {
+        if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'You are not logged in');
         }
+
+        if (Auth::user()->hasRole('Admin')) {
+            return redirect()->route('backend.admin.dashboard');
+        }
+
+        // Non-admin users have no panel — log out and inform them
+        Auth::logout();
+        return redirect()->route('login')->with('error', 'Access denied. This panel is for administrators only.');
     }
 }
