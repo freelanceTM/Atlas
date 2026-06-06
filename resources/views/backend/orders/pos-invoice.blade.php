@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="card">
-  <!-- Main content -->
+  <!-- Thermal receipt -->
   <div class="receipt-container mt-0" id="printable-section" style="max-width: {{ $maxWidth}}; font-size: 12px; font-family: 'Courier New', Courier, monospace;">
     <div class="text-center">
       @if(readConfig('is_show_logo_invoice'))
@@ -16,8 +16,18 @@
       @if(readConfig('is_show_phone_invoice')){{ readConfig('contact_phone') }}<br>@endif
       @if(readConfig('is_show_email_invoice')){{ readConfig('contact_email') }}<br>@endif
     </div>
+
     {{ 'User: '.auth()->user()->name}}<br>
     {{ 'Order: #'.$order->id}}<br>
+
+    {{-- Order Type badge --}}
+    @if(($order->order_type ?? 'takeaway') === 'dine_in')
+      <span style="display:inline-block;background:#e8724a;color:#fff;padding:1px 6px;border-radius:3px;font-weight:bold;">🍽 DINE-IN</span>
+    @else
+      <span style="display:inline-block;background:#555;color:#fff;padding:1px 6px;border-radius:3px;font-weight:bold;">🥡 TAKEAWAY</span>
+    @endif
+    <br>
+
     <hr>
     <div class="row justify-content-between mx-auto">
       <div class="text-left">
@@ -42,8 +52,6 @@
         <tr>
           <th style="text-align: left;">Product</th>
           <th style="text-align: right;"></th>
-          <!-- <th style="text-align: right;">Qty</th> -->
-          <!-- <th style="text-align: right;">Price {{ currency()->symbol}}</th> -->
           <th style="text-align: right;">Total {{ currency()->symbol}}</th>
         </tr>
       </thead>
@@ -51,7 +59,6 @@
         @foreach ($order->products as $item)
         <tr>
           <td>{{ $item->product->name }}</td>
-          <!-- <td class="text-right">{{ $item->quantity }}</td> -->
           <td class="text-right">{{ $item->quantity }}*{{ $item->discounted_price}}</td>
           <td class="text-right">{{ $item->total }}</td>
         </tr>
@@ -102,36 +109,21 @@
     border: 1px dotted #000;
     padding: 8px;
   }
-
   hr {
     border: none;
     border-top: 1px dashed #000;
     margin: 5px 0;
   }
-
-  table {
-    width: 100%;
-  }
-
-  td,
-  th {
-    padding: 2px 0;
-  }
-
-  .text-right {
-    text-align: right;
-  }
-
+  table { width: 100%; }
+  td, th { padding: 2px 0; }
+  .text-right { text-align: right; }
   @media print {
     @page {
       margin-top: 5px !important;
       margin-left: 0px !important;
       padding-left: 0px !important;
     }
-
-    footer {
-      display: none !important;
-    }
+    footer { display: none !important; }
   }
 </style>
 @endpush
