@@ -7,10 +7,8 @@ use App\Http\Controllers\Backend\Report\ReportController;
 use App\Http\Controllers\Backend\SupplierController;
 use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Backend\Product\CategoryController;
-use App\Http\Controllers\TestController;
 use App\Http\Controllers\GoogleController;
 use App\Http\Controllers\Backend\DashboardController;
 use App\Http\Controllers\Backend\RolePermission\PermissionController;
@@ -21,7 +19,6 @@ use App\Http\Controllers\Backend\RolePermission\RoleController;
 use App\Http\Controllers\Backend\Product\UnitController;
 use App\Http\Controllers\Backend\UserManagementController;
 use App\Http\Controllers\Backend\WebsiteSettingController;
-use App\Models\Supplier;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,14 +33,11 @@ use App\Models\Supplier;
 
 // ====================== FRONTEND ======================
 
-// homepage
 Route::get('/', function () {
     return to_route('login');
 })->name('frontend.home');
 
-//authentication
 Route::match(['get', 'post'], 'login', [AuthController::class, 'login'])->name('login');
-
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 Route::match(['get', 'post'], 'sign-up', [AuthController::class, 'register'])->name('signup');
 Route::match(['get', 'post'], 'forget-password', [AuthController::class, 'forgetPassword'])->name('forget.password');
@@ -67,26 +61,25 @@ Route::prefix('admin')->as('backend.admin.')->middleware(['admin'])->group(funct
     Route::resource('purchase', PurchaseController::class);
     Route::resource('suppliers', SupplierController::class);
     Route::resource('customers', CustomerController::class);
-    Route::resource('products', ProductController::class);
     Route::resource('units', UnitController::class);
     Route::resource('currencies', CurrencyController::class);
-    Route::match(['get', 'post'], 'import/products', [ProductController::class,'import'])->name('products.import');
+    Route::match(['get', 'post'], 'import/products', [ProductController::class, 'import'])->name('products.import');
     Route::get('currencies/default/{id}', [CurrencyController::class, 'setDefault'])->name('currencies.setDefault');
     Route::get('customers/orders/{id}', [CustomerController::class, 'orders'])->name('customers.orders');
     Route::get('purchase/products/{id}', [PurchaseController::class, 'purchaseProducts'])->name('purchase.products');
-    Route::get('orders/invoice/{id}', [OrderController::class,'invoice'])->name('orders.invoice');
+    Route::get('orders/invoice/{id}', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::get('orders/pos-invoice/{id}', [OrderController::class, 'posInvoice'])->name('orders.pos-invoice');
     Route::get('orders/transactions/{id}', [OrderController::class, 'transactions'])->name('orders.transactions');
     Route::match(['get', 'post'], 'orders/due/collection/{id}', [OrderController::class, 'collection'])->name('due.collection');
     Route::get('collection/invoice/{id}', [OrderController::class, 'collectionInvoice'])->name('collectionInvoice');
     Route::resource('categories', CategoryController::class);
-    //start report
 
+    // reports
     Route::get('/sale/summery', [ReportController::class, 'saleSummery'])->name('sale.summery');
     Route::get('/sale/report', [ReportController::class, 'saleReport'])->name('sale.report');
     Route::get('/inventory/report', [ReportController::class, 'inventoryReport'])->name('inventory.report');
-    //end report
-   // start pos
+
+    // pos
     Route::get('/get/products', [CartController::class, 'getProducts'])->name('getProducts');
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
@@ -95,9 +88,9 @@ Route::prefix('admin')->as('backend.admin.')->middleware(['admin'])->group(funct
     Route::put('/cart/delete', [CartController::class, 'delete']);
     Route::put('/cart/empty', [CartController::class, 'empty']);
     Route::put('/order/create', [OrderController::class, 'store']);
-    Route::get('/get/customers',[CustomerController::class,'getCustomers']);
+    Route::get('/get/customers', [CustomerController::class, 'getCustomers']);
     Route::post('/create/customers', [CustomerController::class, 'store']);
-    //end pos
+
     Route::get('profile', [DashboardController::class, 'profile'])->name('profile');
     Route::post('profile/update', [AuthController::class, 'update'])->name('profile.update');
 
@@ -112,7 +105,6 @@ Route::prefix('admin')->as('backend.admin.')->middleware(['admin'])->group(funct
 
     // settings
     Route::prefix('settings')->group(function () {
-        // website settings
         Route::prefix('website')->group(function () {
             Route::controller(WebsiteSettingController::class)->prefix('general')->group(function () {
                 Route::get('/', 'websiteGeneral')->name('settings.website.general');
@@ -123,7 +115,6 @@ Route::prefix('admin')->as('backend.admin.')->middleware(['admin'])->group(funct
                 Route::post('update-custom-css', 'websiteCustomCssUpdate')->name('settings.website.custom.css.update');
                 Route::post('update-notification-settings', 'websiteNotificationSettingsUpdate')->name('settings.website.notification.settings.update');
                 Route::post('update-website-status', 'websiteStatusUpdate')->name('settings.website.status.update');
-
                 Route::post('update-invoice-settings', 'websiteInvoiceUpdate')->name('settings.website.invoice.update');
             });
 
@@ -140,7 +131,6 @@ Route::prefix('admin')->as('backend.admin.')->middleware(['admin'])->group(funct
             Route::controller(PermissionController::class)->prefix('permissions')->group(function () {
                 Route::get('/', 'index')->name('permissions');
                 Route::post('create', 'store')->name('permissions.store');
-                // Route::get('show/{id}', 'show')->name('roles.show');
                 Route::put('update/{id}', 'update')->name('permissions.update');
                 Route::get('delete/{id}', 'destroy')->name('permissions.delete');
             });
@@ -150,14 +140,7 @@ Route::prefix('admin')->as('backend.admin.')->middleware(['admin'])->group(funct
 
 // ====================== /BACKEND ======================
 
-Route::get('clear-all', function () {
-    Artisan::call('optimize:clear');
-    return redirect()->back();
-});
-
-Route::get('storage-link', function () {
-    Artisan::call('storage:link');
-    return redirect()->back();
-});
-
-Route::get('test', [TestController::class, 'test'])->name('test');
+// FIX: removed backdoor routes:
+// - Route::get('clear-all', ...)     — allowed anyone to call optimize:clear without auth
+// - Route::get('storage-link', ...)  — allowed anyone to re-link storage without auth
+// - Route::get('test', ...)          — debug/test endpoint exposed to public
