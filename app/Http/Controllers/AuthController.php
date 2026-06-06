@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class AuthController extends Controller
 {
@@ -85,9 +86,15 @@ class AuthController extends Controller
             ]);
 
             if ($newUser) {
+                // FIX: assign 'cashier' role by default — never 'Admin'
+                $cashierRole = Role::where('name', 'cashier')->first();
+                if ($cashierRole) {
+                    $newUser->assignRole($cashierRole);
+                }
+
                 $request->session()->regenerate();
                 Auth::login($newUser);
-                return redirect()->route('backend.admin.dashboard')->with('success', 'User registered successfully');
+                return redirect()->route('login')->with('success', 'Account created. Please log in.');
             } else {
                 return back()->with('error', 'Something went wrong');
             }
@@ -243,7 +250,7 @@ class AuthController extends Controller
         if (demoUserCheck($user->email)) {
             return back()->with('error', 'Cannot update details of demo user');
         }
-        // dd($request->all());
+
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email,' . $user->id,
