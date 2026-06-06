@@ -3,9 +3,8 @@
 @section('content')
 <div class="card">
   <div class="card-body">
-    <!-- Main content -->
     <section class="invoice">
-      <!-- title row -->
+      <!-- Title row -->
       <div class="row mb-4">
         <div class="col-4">
           <h2 class="page-header">
@@ -22,11 +21,10 @@
         <div class="col-4">
           <small class="float-right text-small">Date: {{date('d/m/Y')}}</small>
         </div>
-        <!-- /.col -->
       </div>
-      <!-- info row -->
+
+      <!-- Info row -->
       <div class="row invoice-info">
-        <!-- /.col -->
         <div class="col-sm-5 invoice-col">
           @if(readConfig('is_show_customer_invoice'))
           To
@@ -46,18 +44,18 @@
             @if(readConfig('is_show_email_invoice'))Email: {{ readConfig('contact_email') }}<br>@endif
           </address>
         </div>
-        <!-- /.col -->
         <div class="col-sm-3 invoice-col">
           Info <br>
-          Sale ID #{{$order->id}}<br>
+          Sale ID: #{{$order->id}}<br>
           Sale Date: {{date('d/m/Y', strtotime($order->created_at))}}<br>
-          <!-- <br>
-          <b>Payment Due:</b> 2/22/2014<br>
-          <b>Account:</b> 968-34567 -->
+          Order Type:
+          @if(($order->order_type ?? 'takeaway') === 'dine_in')
+            <span style="display:inline-block;background:#e8724a;color:#fff;padding:1px 8px;border-radius:4px;font-weight:600;">🍽 Dine-in</span>
+          @else
+            <span style="display:inline-block;background:#555;color:#fff;padding:1px 8px;border-radius:4px;font-weight:600;">🥡 Takeaway</span>
+          @endif
         </div>
-        <!-- /.col -->
       </div>
-      <!-- /.row -->
 
       <!-- Table row -->
       <div class="row">
@@ -73,14 +71,14 @@
               </tr>
             </thead>
             <tbody>
-              @foreach ($order->products as $item )
+              @foreach ($order->products as $item)
               <tr>
                 <td>{{$loop->index + 1}}</td>
                 <td>{{$item->product->name}}</td>
                 <td>{{$item->quantity}} {{optional($item->product->unit)->short_name}}</td>
                 <td>
-                  {{$item->discounted_price }}
-                  @if ($item->price>$item->discounted_price)
+                  {{$item->discounted_price}}
+                  @if ($item->price > $item->discounted_price)
                   <br><del>{{ $item->price }}</del>
                   @endif
                 </td>
@@ -90,23 +88,15 @@
             </tbody>
           </table>
         </div>
-        <!-- /.col -->
       </div>
-      <!-- /.row -->
 
       <div class="row">
-        <!-- accepted payments column -->
         <div class="col-6">
-          <!-- <p class="lead">Payment:Cash Paid</p> -->
-          <!-- <small class="lead text-small text-bold">Payment:Cash Paid</small> -->
           <p class="text-muted well well-sm shadow-none" style="margin-top: 10px;">
             @if(readConfig('is_show_note_invoice')){{ readConfig('note_to_customer_invoice') }}@endif
           </p>
         </div>
-        <!-- /.col -->
         <div class="col-6">
-          <!-- <p class="lead">Amount Due 2/22/2014</p> -->
-
           <div class="table-responsive">
             <table class="table">
               <tr>
@@ -132,28 +122,26 @@
             </table>
           </div>
         </div>
-        <!-- /.col -->
       </div>
+
       <div class="row no-print">
         <div class="col-12">
-          <button type="button" onclick="window.print()" class="btn btn-success float-right"><i class="fas fa-print"></i> Print</a>
+          <button type="button" onclick="window.print()" class="btn btn-success float-right">
+            <i class="fas fa-print"></i> Print
           </button>
         </div>
       </div>
-      <!-- /.row -->
     </section>
-    <!-- /.content -->
   </div>
 </div>
 @endsection
 
 @push('style')
 <style>
-  .invoice {
-    border: none !important;
-  }
+  .invoice { border: none !important; }
 </style>
 @endpush
+
 @push('script')
 <script>
   window.addEventListener("load", window.print());
