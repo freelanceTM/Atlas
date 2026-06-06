@@ -190,6 +190,37 @@ $route = request()->route()->getName();
             </li>
             @endif
 
+            {{-- Ingredients --}}
+            <li class="nav-item {{ request()->routeIs(['backend.admin.ingredients.*','backend.admin.products.recipes','backend.admin.ingredients.report']) ? 'menu-open' : '' }}">
+                <a href="#" class="nav-link {{ request()->routeIs(['backend.admin.ingredients.*','backend.admin.products.recipes','backend.admin.ingredients.report']) ? 'active' : '' }}">
+                    <i class="nav-icon fas fa-flask"></i>
+                    <p>Ingredients <i class="fas fa-angle-left right"></i></p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ route('backend.admin.ingredients.index') }}"
+                            class="nav-link {{ request()->routeIs('backend.admin.ingredients.index') ? 'active' : '' }}">
+                            <i class="fas fa-list nav-icon"></i>
+                            <p>Ingredient List</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('backend.admin.ingredients.create') }}"
+                            class="nav-link {{ request()->routeIs('backend.admin.ingredients.create') ? 'active' : '' }}">
+                            <i class="fas fa-plus-circle nav-icon"></i>
+                            <p>Add Ingredient</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('backend.admin.ingredients.report') }}"
+                            class="nav-link {{ request()->routeIs('backend.admin.ingredients.report') ? 'active' : '' }}">
+                            <i class="fas fa-chart-bar nav-icon"></i>
+                            <p>Stock Report</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
             {{-- Reports --}}
             @if (auth()->user()->hasAnyPermission(['reports_summary','reports_sales','reports_inventory']))
             <li class="nav-item {{ request()->routeIs(['backend.admin.sale.report','backend.admin.sale.summery','backend.admin.inventory.report']) ? 'menu-open' : '' }}">
