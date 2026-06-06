@@ -8,6 +8,7 @@ use App\Models\OrderTransaction;
 use App\Models\PosCart;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\DataTables;
 
 class OrderController extends Controller
@@ -61,6 +62,7 @@ class OrderController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     * FIX: entire order creation is wrapped in DB::transaction — any failure triggers full rollback.
      */
     public function store(Request $request)
     {
@@ -68,7 +70,7 @@ class OrderController extends Controller
             'customer_id' => [
                 'required',
                 'exists:customers,id',
-                'integer', // Ensure customer_id is an integer
+                'integer',
             ],
             'order_discount' => [
                 'nullable',
@@ -86,51 +88,74 @@ class OrderController extends Controller
             'order_discount.numeric' => 'The order discount must be a number.',
             'paid.numeric' => 'The amount paid must be a number.',
         ]);
-        $carts = PosCart::with('product')->where('user_id', auth()->id())->get();
-        $order = Order::create([
-            'customer_id' => $request->customer_id,
-            'user_id' => $request->user()->id,
-        ]);
-        $totalAmountOrder = 0;
-        $orderDiscount = $request->order_discount;
-        foreach ($carts as $cart) {
-            $mainTotal = $cart->product->price * $cart->quantity;
-            $totalAfterDiscount = $cart->product->discounted_price * $cart->quantity;
-            $discount = $mainTotal - $totalAfterDiscount;
-            $totalAmountOrder += $totalAfterDiscount;
-            $order->products()->create([
-                'quantity' => $cart->quantity,
-                'price' => $cart->product->price,
-                'purchase_price' => $cart->product->purchase_price,
-                'sub_total' => $mainTotal,
-                'discount' => $discount,
-                'total' => $totalAfterDiscount,
-                'product_id' => $cart->product->id,
-            ]);
-            $cart->product->quantity = $cart->product->quantity - $cart->quantity;
-            $cart->product->save();
-        }
-        $total = $totalAmountOrder - $orderDiscount;
-        $due = $total - $request->paid;
-        $order->sub_total = $totalAmountOrder;
-        $order->discount = $orderDiscount;
-        $order->paid = $request->paid;
-        $order->total = round((float)$total, 2);
-        $order->due = round((float)$due, 2);
-        $order->status = round((float)$due, 2) <= 0;
-        $order->save();
-        //create order transaction
-        if ($request->paid > 0) {
-            $orderTransaction = $order->transactions()->create([
-                'amount' => $request->paid,
-                'customer_id' => $order->customer_id,
-                'user_id' => auth()->id(),
-                'paid_by' => 'cash',
-            ]);
-        }
 
-        $carts = PosCart::where('user_id', auth()->id())->delete();
-        return response()->json(['message' => 'Order completed successfully', 'order' => $order], 200);
+        try {
+            $order = DB::transaction(function () use ($request) {
+                $carts = PosCart::with('product')->where('user_id', auth()->id())->get();
+
+                // Step 1: create order
+                $order = Order::create([
+                    'customer_id' => $request->customer_id,
+                    'user_id' => $request->user()->id,
+                ]);
+
+                $totalAmountOrder = 0;
+                $orderDiscount = (float) ($request->order_discount ?? 0);
+
+                // Step 2: create order_items + Step 3: deduct stock
+                foreach ($carts as $cart) {
+                    $mainTotal = $cart->product->price * $cart->quantity;
+                    $totalAfterDiscount = $cart->product->discounted_price * $cart->quantity;
+                    $discount = $mainTotal - $totalAfterDiscount;
+                    $totalAmountOrder += $totalAfterDiscount;
+
+                    $order->products()->create([
+                        'quantity' => $cart->quantity,
+                        'price' => $cart->product->price,
+                        'purchase_price' => $cart->product->purchase_price,
+                        'sub_total' => $mainTotal,
+                        'discount' => $discount,
+                        'total' => $totalAfterDiscount,
+                        'product_id' => $cart->product->id,
+                    ]);
+
+                    // stock deduction — inside transaction, rolls back on error
+                    $cart->product->quantity = $cart->product->quantity - $cart->quantity;
+                    $cart->product->save();
+                }
+
+                $total = $totalAmountOrder - $orderDiscount;
+                $paid  = (float) ($request->paid ?? 0);
+                $due   = $total - $paid;
+
+                $order->sub_total = $totalAmountOrder;
+                $order->discount  = $orderDiscount;
+                $order->paid      = $paid;
+                $order->total     = round($total, 2);
+                $order->due       = round($due, 2);
+                $order->status    = round($due, 2) <= 0;
+                $order->save();
+
+                // Step 4: create payment transaction
+                if ($paid > 0) {
+                    $order->transactions()->create([
+                        'amount'      => $paid,
+                        'customer_id' => $order->customer_id,
+                        'user_id'     => auth()->id(),
+                        'paid_by'     => 'cash',
+                    ]);
+                }
+
+                // Clear cart only after all steps succeed
+                PosCart::where('user_id', auth()->id())->delete();
+
+                return $order;
+            });
+
+            return response()->json(['message' => 'Order completed successfully', 'order' => $order], 200);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Order failed. All changes have been rolled back.', 'error' => $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -164,50 +189,47 @@ class OrderController extends Controller
     {
         //
     }
+
     public function invoice($id)
     {
         $order = Order::with(['customer', 'products.product'])->findOrFail($id);
         return view('backend.orders.print-invoice', compact('order'));
     }
+
     public function collection(Request $request, $id)
     {
-
         $order = Order::findOrFail($id);
         if ($request->isMethod('post')) {
             $data = $request->validate([
                 'amount' => 'required|numeric|min:1',
             ]);
 
-
-            $due = $order->due - $data['amount'];
+            $due  = $order->due - $data['amount'];
             $paid = $order->paid + $data['amount'];
-            $order->due = round((float)$due, 2);
-            $order->paid = round((float)$paid, 2);
+            $order->due    = round((float)$due, 2);
+            $order->paid   = round((float)$paid, 2);
             $order->status = round((float)$due, 2) <= 0;
             $order->save();
-            $collection_amount = $data['amount'];
-            //create order transaction
 
             $orderTransaction = $order->transactions()->create([
-                'amount' => $data['amount'],
+                'amount'      => $data['amount'],
                 'customer_id' => $order->customer_id,
-                'user_id' => auth()->id(),
-                'paid_by' => 'cash',
+                'user_id'     => auth()->id(),
+                'paid_by'     => 'cash',
             ]);
             return to_route('backend.admin.collectionInvoice', $orderTransaction->id);
         }
         return view('backend.orders.collection.create', compact('order'));
     }
 
-    //collection invoice by order_transaction id
     public function collectionInvoice($id)
     {
-        $transaction = OrderTransaction::findOrFail($id);
+        $transaction       = OrderTransaction::findOrFail($id);
         $collection_amount = $transaction->amount;
-        $order = $transaction->order;
+        $order             = $transaction->order;
         return view('backend.orders.collection.invoice', compact('order', 'collection_amount', 'transaction'));
     }
-    //transactions by order id
+
     public function transactions($id)
     {
         $order = Order::with('transactions')->findOrFail($id);
@@ -216,8 +238,8 @@ class OrderController extends Controller
 
     public function posInvoice($id)
     {
-        $order = Order::with(['customer', 'products.product'])->findOrFail($id);
-        $maxWidth = readConfig('receiptMaxwidth')??'300px';
+        $order    = Order::with(['customer', 'products.product'])->findOrFail($id);
+        $maxWidth = readConfig('receiptMaxwidth') ?? '300px';
         return view('backend.orders.pos-invoice', compact('order', 'maxWidth'));
     }
 }
