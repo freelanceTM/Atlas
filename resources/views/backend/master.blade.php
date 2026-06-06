@@ -51,65 +51,15 @@
     <link rel="stylesheet" href="{{ asset('css/custom-style.css') }}">
 
     <style>
-        .image-upload-container {
-            border: 2px dashed #8b9ee9;
-            /* Dashed border color */
-            border-radius: 8px;
-            background-color: #f8f9fa;
-            /* Light background color */
-            display: flex;
-            justify-content: center;
-            /* Center the content */
-            align-items: center;
-            /* Center the content vertically */
-            width: 100%;
-            /* Make the container full width of its parent */
-            height: 200px;
-            /* Fixed height */
-            cursor: pointer;
-            /* Indicate clickability */
-        }
-
-        .thumb-preview {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            /* Prevents overflow */
-        }
-
-        #thumbnailPreview {
-            max-width: 100%;
-            max-height: 100%;
-            /* Ensure it fits within the container */
-            object-fit: cover;
-            /* Maintain aspect ratio while covering the box */
-        }
-
-        .upload-text {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #8b9ee9;
-            /* Text color */
-            text-align: center;
-        }
-
-        .upload-text i {
-            font-size: 24px;
-            /* Icon size */
-            margin-bottom: 5px;
-            /* Space between icon and text */
-        }
+        /* Inline overrides — detailed styles live in custom-style.css */
+        body { font-family: 'Source Sans Pro', sans-serif; }
     </style>
     @stack('style')
     @viteReactRefresh
     @vite('resources/js/app.jsx')
 </head>
 
-<body class="hold-transition sidebar-mini layout-fixed">
+<body class="hold-transition sidebar-mini layout-fixed sidebar-dark-primary">
 
     <x-simple-alert />
 
@@ -126,12 +76,16 @@
         <!-- /.navbar -->
 
         <!-- Main Sidebar Container -->
-        <aside class="main-sidebar elevation-4 sidebar-light-lightblue">
-            <!-- Brand Logo -->
-            <a href="{{ route('frontend.home') }}" class="brand-link">
-                <img src="{{ assetImage(readconfig('site_logo')) }}" alt="Logo"
-                    class="brand-image img-circle elevation-3" style="opacity: .8">
-                <span class="brand-text font-weight-light">{{ readConfig('site_name') }}</span>
+        <aside class="main-sidebar elevation-4">
+            <!-- Restaurant Brand Bar -->
+            <a href="{{ route('frontend.home') }}" class="restaurant-brand">
+                <div class="brand-icon">
+                    <i class="fas fa-utensils"></i>
+                </div>
+                <div>
+                    <span class="brand-name">{{ readConfig('site_name') }}</span>
+                    <span class="brand-sub">Restaurant POS</span>
+                </div>
             </a>
 
             <!-- Sidebar -->
