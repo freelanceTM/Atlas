@@ -194,7 +194,11 @@ export default function Pos() {
                         window.location.href = `orders/pos-invoice/${res?.data?.order?.id}`;
                     })
                     .catch((err) => {
-                        toast.error(err.response.data.message);
+                        // FIX BUG-5: optional chaining — prevents crash on network errors
+                        // or when backend returns non-JSON (e.g. 500 HTML page)
+                        toast.error(
+                            err?.response?.data?.message ?? "Order failed. Please try again."
+                        );
                     });
             }
         });
