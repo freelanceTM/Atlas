@@ -91,7 +91,11 @@ class UserManagementController extends Controller
     public function fetchPageData(Request $request)
     {
         if ($request->ajax()) {
-            $users = User::where('type', 'User')->latest()->paginate(10);
+            // UNIFIED ACCESS CONTROL (Spatie): the legacy `type` column does not
+            // exist. Select regular users as those who do NOT hold the Admin role.
+            $users = User::whereDoesntHave('roles', function ($q) {
+                $q->where('name', 'Admin');
+            })->latest()->paginate(10);
 
             return view('backend.users.user-table-data', compact('users'))->render();
         }

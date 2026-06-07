@@ -22,7 +22,10 @@ class UserMiddleware
                 return redirect()->route('login')->with('error', 'Your account is temporarily suspended');
             }
 
-            if (auth()->user()->type != 'User') {
+            // UNIFIED ACCESS CONTROL (Spatie): the legacy `type` column does not
+            // exist on the users table. This area is for regular (non-Admin) users,
+            // so block anyone holding the Admin role using the single Spatie mechanism.
+            if (auth()->user()->hasRole('Admin')) {
                 Auth::logout();
                 return redirect()->route('login')->with('error', 'You are not a User');
             }

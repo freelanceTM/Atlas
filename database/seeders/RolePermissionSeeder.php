@@ -70,6 +70,8 @@ class RolePermissionSeeder extends Seeder
             'purchase_view',
             'purchase_update',
             'purchase_delete',
+            //ingredients & recipes
+            'ingredient_manage',
             //reports
             'reports_summary',
             'reports_sales',

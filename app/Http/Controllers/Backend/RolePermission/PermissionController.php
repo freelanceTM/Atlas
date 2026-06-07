@@ -9,6 +9,16 @@ use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
+    /**
+     * UNIFIED ACCESS CONTROL (Spatie): these endpoints previously had NO
+     * authorization at all. Enforce the single Spatie mechanism via the
+     * `permission` middleware using the `permission_view` ability.
+     */
+    public function __construct()
+    {
+        $this->middleware('permission:permission_view');
+    }
+
     // show permission page
     public function index()
     {

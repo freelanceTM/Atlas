@@ -12,20 +12,17 @@ use Illuminate\Support\Facades\DB;
 class IngredientController extends Controller
 {
     /**
-     * FIX BUG-2: AdminMiddleware only checks Auth::check() — the type=='Admin'
-     * guard is commented out there. We enforce it here so ANY authenticated
-     * non-Admin user (cashier, user, etc.) is blocked with 403.
+     * UNIFIED ACCESS CONTROL (Spatie).
+     *
+     * Previously this guarded with the non-existent `user()->type` column, which
+     * mixed two access-control models and silently evaluated to a broken check.
+     * We now enforce the single Spatie mechanism via the `permission` middleware
+     * using the dedicated `ingredient_manage` permission. The route group already
+     * applies the `admin` middleware, so this is the fine-grained second layer.
      */
     public function __construct()
     {
-        $this->middleware(function ($request, $next) {
-            abort_if(
-                !auth()->check() || auth()->user()->type !== 'Admin',
-                403,
-                'Access denied. Ingredient management requires Admin role.'
-            );
-            return $next($request);
-        });
+        $this->middleware('permission:ingredient_manage');
     }
 
     // ─────────────────────────────────────────────

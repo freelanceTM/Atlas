@@ -38,7 +38,7 @@ class RoleController extends Controller
     // update a role
     public function update(Request $request, $id)
     {
-       abort_if(!auth()->user()->can('currency_update'), 403);
+        abort_if(!auth()->user()->can('role_update'), 403);
         $request->validate([
             'name' => "required|unique:roles,name," . $id
         ]);
