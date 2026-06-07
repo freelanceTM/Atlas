@@ -21,7 +21,7 @@
     </div>
 
     <form action="{{ route('backend.admin.ingredients.arrival', $ingredient->id) }}" method="POST">
-      @csrf @method('POST')
+      @csrf{{-- FIX BUG-6: removed redundant @method('POST') — POST forms don't need method spoofing --}}
 
       <div class="form-group">
         <label>Quantity to Add <span class="text-danger">*</span>
