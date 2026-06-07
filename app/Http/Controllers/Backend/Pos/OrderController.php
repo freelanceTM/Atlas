@@ -77,120 +77,145 @@ class OrderController extends Controller
             return response()->json(['message' => 'Cart is empty.'], 422);
         }
 
-        $order = DB::transaction(function () use ($request, $carts) {
+        // ── FIX BUG-1: Catch domain exceptions and return JSON 422 ────────
+        try {
+            $order = DB::transaction(function () use ($request, $carts) {
 
-            // ── 1. Lock products ──────────────────────────────────────────
-            $productIds = $carts->pluck('product_id')->toArray();
-            $products   = Product::whereIn('id', $productIds)
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('id');
+                // ── 1. Lock products (sorted by ID → FIX BUG-3 deadlock) ──────
+                $productIds = collect($carts->pluck('product_id'))
+                    ->unique()->sort()->values()->toArray();
 
-            // ── 2. Guard: product stock ───────────────────────────────────
-            foreach ($carts as $cart) {
-                $product = $products[$cart->product_id] ?? null;
-                if (!$product || $product->quantity < $cart->quantity) {
-                    throw new \Exception(
-                        'Insufficient product stock for: ' . ($product->name ?? 'unknown product')
-                    );
-                }
-            }
-
-            // ── 3. Calculate total ingredient requirements ────────────────
-            $ingredientRequired = [];
-            foreach ($carts as $cart) {
-                $recipes = Recipe::where('product_id', $cart->product_id)->get();
-                foreach ($recipes as $recipe) {
-                    $needed = $recipe->quantity * $cart->quantity;
-                    $ingredientRequired[$recipe->ingredient_id] =
-                        ($ingredientRequired[$recipe->ingredient_id] ?? 0) + $needed;
-                }
-            }
-
-            // ── 4. Lock and guard ingredient stock ────────────────────────
-            if (!empty($ingredientRequired)) {
-                $lockedIngredients = Ingredient::whereIn('id', array_keys($ingredientRequired))
+                $products = Product::whereIn('id', $productIds)
+                    ->orderBy('id')          // deterministic lock order
                     ->lockForUpdate()
                     ->get()
                     ->keyBy('id');
 
-                foreach ($ingredientRequired as $ingredientId => $needed) {
-                    $ingredient = $lockedIngredients[$ingredientId] ?? null;
-                    if (!$ingredient || $ingredient->stock < $needed) {
-                        throw new \Exception(
-                            'Insufficient ingredient: ' .
-                            ($ingredient->name ?? 'unknown') .
-                            ' (need ' . round($needed, 3) .
-                            ' ' . ($ingredient->unit ?? '') .
-                            ', have ' . round($ingredient->stock ?? 0, 3) . ')'
+                // ── 2. Guard: product stock ───────────────────────────────────
+                foreach ($carts as $cart) {
+                    $product = $products[$cart->product_id] ?? null;
+                    if (!$product || $product->quantity < $cart->quantity) {
+                        throw new \DomainException(
+                            'Insufficient product stock for: ' . ($product->name ?? 'unknown product')
                         );
                     }
                 }
-            }
 
-            // ── 5. Create the order ───────────────────────────────────────
-            $order = Order::create([
-                'customer_id' => $request->customer_id,
-                'user_id'     => $request->user()->id,
-                'order_type'  => $request->order_type ?? 'takeaway',
-            ]);
+                // ── 3. Calculate total ingredient requirements ────────────────
+                $ingredientRequired = [];
+                foreach ($carts as $cart) {
+                    $recipes = Recipe::where('product_id', $cart->product_id)->get();
+                    foreach ($recipes as $recipe) {
+                        $needed = $recipe->quantity * $cart->quantity;
+                        $ingredientRequired[$recipe->ingredient_id] =
+                            ($ingredientRequired[$recipe->ingredient_id] ?? 0) + $needed;
+                    }
+                }
 
-            $totalAmountOrder = 0;
-            $orderDiscount    = (float) ($request->order_discount ?? 0);
+                // ── 4. Lock ingredients (sorted by ID → FIX BUG-3 deadlock) ──
+                if (!empty($ingredientRequired)) {
+                    // Sort keys for deterministic lock ordering — prevents deadlock
+                    $ingredientIds = collect(array_keys($ingredientRequired))
+                        ->sort()->values()->toArray();
 
-            // ── 6. Create order lines + decrement product stock ───────────
-            foreach ($carts as $cart) {
-                $product            = $products[$cart->product_id];
-                $mainTotal          = $product->price * $cart->quantity;
-                $totalAfterDiscount = $product->discounted_price * $cart->quantity;
-                $discount           = $mainTotal - $totalAfterDiscount;
-                $totalAmountOrder  += $totalAfterDiscount;
+                    $lockedIngredients = Ingredient::whereIn('id', $ingredientIds)
+                        ->orderBy('id')      // deterministic lock order
+                        ->lockForUpdate()
+                        ->get()
+                        ->keyBy('id');
 
-                $order->products()->create([
-                    'quantity'       => $cart->quantity,
-                    'price'          => $product->price,
-                    'purchase_price' => $product->purchase_price,
-                    'sub_total'      => $mainTotal,
-                    'discount'       => $discount,
-                    'total'          => $totalAfterDiscount,
-                    'product_id'     => $product->id,
+                    foreach ($ingredientIds as $ingredientId) {
+                        $needed     = $ingredientRequired[$ingredientId];
+                        $ingredient = $lockedIngredients[$ingredientId] ?? null;
+
+                        if (!$ingredient) {
+                            throw new \DomainException(
+                                'Recipe references a deleted ingredient (id=' . $ingredientId . '). Please update the recipe.'
+                            );
+                        }
+
+                        if ($ingredient->stock < $needed) {
+                            throw new \DomainException(
+                                'Insufficient ingredient: ' . $ingredient->name .
+                                ' — need ' . round($needed, 3) . ' ' . $ingredient->unit .
+                                ', have ' . round($ingredient->stock, 3) . ' ' . $ingredient->unit . '.'
+                            );
+                        }
+                    }
+                }
+
+                // ── 5. Create the order ───────────────────────────────────────
+                $order = Order::create([
+                    'customer_id' => $request->customer_id,
+                    'user_id'     => $request->user()->id,
+                    'order_type'  => $request->order_type ?? 'takeaway',
                 ]);
 
-                // Atomic decrement — safe under lockForUpdate
-                Product::where('id', $product->id)->decrement('quantity', $cart->quantity);
-            }
+                $totalAmountOrder = 0;
+                $orderDiscount    = (float) ($request->order_discount ?? 0);
 
-            // ── 7. Deduct ingredients ─────────────────────────────────────
-            foreach ($ingredientRequired as $ingredientId => $needed) {
-                Ingredient::where('id', $ingredientId)->decrement('stock', $needed);
-            }
+                // ── 6. Create order lines + decrement product stock ───────────
+                foreach ($carts as $cart) {
+                    $product            = $products[$cart->product_id];
+                    $mainTotal          = $product->price * $cart->quantity;
+                    $totalAfterDiscount = $product->discounted_price * $cart->quantity;
+                    $discount           = $mainTotal - $totalAfterDiscount;
+                    $totalAmountOrder  += $totalAfterDiscount;
 
-            // ── 8. Finalize order totals ──────────────────────────────────
-            $total = $totalAmountOrder - $orderDiscount;
-            $paid  = (float) ($request->paid ?? 0);
-            $due   = $total - $paid;
+                    $order->products()->create([
+                        'quantity'       => $cart->quantity,
+                        'price'          => $product->price,
+                        'purchase_price' => $product->purchase_price,
+                        'sub_total'      => $mainTotal,
+                        'discount'       => $discount,
+                        'total'          => $totalAfterDiscount,
+                        'product_id'     => $product->id,
+                    ]);
 
-            $order->sub_total = $totalAmountOrder;
-            $order->discount  = $orderDiscount;
-            $order->paid      = $paid;
-            $order->total     = round($total, 2);
-            $order->due       = round($due, 2);
-            $order->status    = round($due, 2) <= 0 ? 1 : 0;
-            $order->save();
+                    // Atomic decrement — safe under lockForUpdate
+                    Product::where('id', $product->id)->decrement('quantity', $cart->quantity);
+                }
 
-            if ($paid > 0) {
-                $order->transactions()->create([
-                    'amount'      => $paid,
-                    'customer_id' => $order->customer_id,
-                    'user_id'     => auth()->id(),
-                    'paid_by'     => 'cash',
-                ]);
-            }
+                // ── 7. Deduct ingredients ─────────────────────────────────────
+                foreach ($ingredientRequired as $ingredientId => $needed) {
+                    Ingredient::where('id', $ingredientId)->decrement('stock', $needed);
+                }
 
-            PosCart::where('user_id', auth()->id())->delete();
+                // ── 8. Finalize order totals ──────────────────────────────────
+                $total = $totalAmountOrder - $orderDiscount;
+                $paid  = (float) ($request->paid ?? 0);
+                $due   = $total - $paid;
 
-            return $order;
-        });
+                $order->sub_total = $totalAmountOrder;
+                $order->discount  = $orderDiscount;
+                $order->paid      = $paid;
+                $order->total     = round($total, 2);
+                $order->due       = round($due, 2);
+                $order->status    = round($due, 2) <= 0 ? 1 : 0;
+                $order->save();
+
+                if ($paid > 0) {
+                    $order->transactions()->create([
+                        'amount'      => $paid,
+                        'customer_id' => $order->customer_id,
+                        'user_id'     => auth()->id(),
+                        'paid_by'     => 'cash',
+                    ]);
+                }
+
+                PosCart::where('user_id', auth()->id())->delete();
+
+                return $order;
+            });
+        } catch (\DomainException $e) {
+            // Domain exceptions (stock/ingredient guards) → friendly 422
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            // Unexpected DB errors → generic 500 with safe message
+            return response()->json([
+                'message' => 'Order could not be completed due to a server error. Please try again.',
+            ], 500);
+        }
 
         return response()->json([
             'message' => 'Order completed successfully',
@@ -218,25 +243,29 @@ class OrderController extends Controller
                 'amount' => 'required|numeric|min:0.01',
             ]);
 
-            $orderTransaction = DB::transaction(function () use ($order, $data) {
-                $locked = Order::where('id', $order->id)->lockForUpdate()->firstOrFail();
+            try {
+                $orderTransaction = DB::transaction(function () use ($order, $data) {
+                    $locked = Order::where('id', $order->id)->lockForUpdate()->firstOrFail();
 
-                if ($data['amount'] > $locked->due) {
-                    throw new \Exception('Payment amount exceeds the outstanding due.');
-                }
+                    if ($data['amount'] > $locked->due) {
+                        throw new \DomainException('Payment amount exceeds the outstanding due.');
+                    }
 
-                $locked->due    = round($locked->due  - $data['amount'], 2);
-                $locked->paid   = round($locked->paid + $data['amount'], 2);
-                $locked->status = $locked->due <= 0 ? 1 : 0;
-                $locked->save();
+                    $locked->due    = round($locked->due  - $data['amount'], 2);
+                    $locked->paid   = round($locked->paid + $data['amount'], 2);
+                    $locked->status = $locked->due <= 0 ? 1 : 0;
+                    $locked->save();
 
-                return $locked->transactions()->create([
-                    'amount'      => $data['amount'],
-                    'customer_id' => $locked->customer_id,
-                    'user_id'     => auth()->id(),
-                    'paid_by'     => 'cash',
-                ]);
-            });
+                    return $locked->transactions()->create([
+                        'amount'      => $data['amount'],
+                        'customer_id' => $locked->customer_id,
+                        'user_id'     => auth()->id(),
+                        'paid_by'     => 'cash',
+                    ]);
+                });
+            } catch (\DomainException $e) {
+                return back()->withErrors(['amount' => $e->getMessage()]);
+            }
 
             return to_route('backend.admin.collectionInvoice', $orderTransaction->id);
         }
