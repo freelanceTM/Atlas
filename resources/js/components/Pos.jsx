@@ -238,7 +238,7 @@ export default function Pos() {
                     </a>
                     <div className="pos-logo">
                         <div className="pos-logo-icon"><i className="fas fa-utensils"></i></div>
-                        <span className="pos-logo-name">Atlas Cafe</span>
+                        <span className="pos-logo-name">OWAZ KAFE</span>
                         <span className="pos-logo-sub">POS</span>
                     </div>
                 </div>
@@ -374,7 +374,7 @@ export default function Pos() {
                             </div>
 
                             <div className="pos-quick">
-                                {[100, 200, 500, 1000].map(a => (
+                                {[5, 10, 20, 50].map(a => (
                                     <button key={a} className="pos-qbtn" onClick={() => setPaid(String(a))}>{a}₽</button>
                                 ))}
                                 <button className="pos-qbtn pos-qexact" onClick={() => setPaid(updTotal.toFixed(2))}>Точно</button>

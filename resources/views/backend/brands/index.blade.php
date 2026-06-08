@@ -1,6 +1,6 @@
 @extends('backend.master')
 
-@section('title', 'Brands')
+@section('title', 'Бренды')
 
 @section('content')
 <div class="card">
@@ -9,7 +9,7 @@
   <div class="mt-n5 mb-3 d-flex justify-content-end">
     <a href="{{ route('backend.admin.brands.create') }}" class="btn bg-gradient-primary">
       <i class="fas fa-plus-circle"></i>
-      Add New
+      Добавить
     </a>
   </div>
   @endcan
@@ -22,9 +22,9 @@
               <tr>
                 <th data-orderable="false">#</th>
                 <th></th>
-                <th>Name</th>
-                <th>Status</th>
-                <th data-orderable="false">Action</th>
+                <th>Название</th>
+                <th>Статус</th>
+                <th data-orderable="false">Действия</th>
               </tr>
             </thead>
           </table>

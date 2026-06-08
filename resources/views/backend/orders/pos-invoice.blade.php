@@ -17,14 +17,14 @@
       @if(readConfig('is_show_email_invoice')){{ readConfig('contact_email') }}<br>@endif
     </div>
 
-    {{ 'User: '.auth()->user()->name}}<br>
-    {{ 'Order: #'.$order->id}}<br>
+    {{ 'Kassir: '.auth()->user()->name}}<br>
+    {{ 'Sargyt: #'.$order->id}}<br>
 
     {{-- Order Type badge --}}
     @if(($order->order_type ?? 'takeaway') === 'dine_in')
-      <span style="display:inline-block;background:#e8724a;color:#fff;padding:1px 6px;border-radius:3px;font-weight:bold;">🍽 DINE-IN</span>
+      <span style="display:inline-block;background:#e8724a;color:#fff;padding:1px 6px;border-radius:3px;font-weight:bold;">🍽 ZAL</span>
     @else
-      <span style="display:inline-block;background:#555;color:#fff;padding:1px 6px;border-radius:3px;font-weight:bold;">🥡 TAKEAWAY</span>
+      <span style="display:inline-block;background:#555;color:#fff;padding:1px 6px;border-radius:3px;font-weight:bold;">🥡 ALYP GITMEK</span>
     @endif
     <br>
 
@@ -33,9 +33,9 @@
       <div class="text-left">
         @if(readConfig('is_show_customer_invoice'))
         <address>
-          Name: {{ $order->customer->name ?? 'N/A' }}<br>
-          Address: {{ $order->customer->address ?? 'N/A' }}<br>
-          Phone: {{ $order->customer->phone ?? 'N/A' }}
+          Ady: {{ $order->customer->name ?? 'N/A' }}<br>
+          Adresi: {{ $order->customer->address ?? 'N/A' }}<br>
+          Telefon: {{ $order->customer->phone ?? 'N/A' }}
         </address>
         @endif
       </div>
@@ -50,9 +50,9 @@
     <table style="width: 100%;">
       <thead>
         <tr>
-          <th style="text-align: left;">Product</th>
+          <th style="text-align: left;">Haryt</th>
           <th style="text-align: right;"></th>
-          <th style="text-align: right;">Total {{ currency()->symbol}}</th>
+          <th style="text-align: right;">Jemi {{ currency()->symbol}}</th>
         </tr>
       </thead>
       <tbody>
@@ -69,23 +69,23 @@
     <div class="summary">
       <table style="width: 100%;">
         <tr>
-          <td>Subtotal:</td>
+          <td>Jemi:</td>
           <td class="text-right">{{number_format($order->sub_total, 2) }}</td>
         </tr>
         <tr>
-          <td>Discount:</td>
+          <td>Arzanladys:</td>
           <td class="text-right">{{number_format($order->discount, 2) }}</td>
         </tr>
         <tr>
-          <td><strong>Total:</strong></td>
+          <td><strong>Tolemeli:</strong></td>
           <td class="text-right"><strong>{{number_format($order->total, 2) }}</strong></td>
         </tr>
         <tr>
-          <td>Paid:</td>
+          <td>Tolenen:</td>
           <td class="text-right">{{number_format($order->paid, 2) }}</td>
         </tr>
         <tr>
-          <td>Due:</td>
+          <td>Galyk:</td>
           <td class="text-right">{{number_format($order->due, 2) }}</td>
         </tr>
       </table>
@@ -98,7 +98,7 @@
 
   <!-- Print Button -->
   <div class="text-center mt-3 no-print pb-3">
-    <button type="button" onclick="window.print()" class="btn bg-gradient-primary text-white"><i class="fas fa-print"></i> Print</button>
+    <button type="button" onclick="window.print()" class="btn bg-gradient-primary text-white"><i class="fas fa-print"></i> Cap et</button>
   </div>
 </div>
 @endsection

@@ -38,8 +38,8 @@
                     <a href="{{ route('frontend.home') }}" class="logo">
                         <img src="{{ assetImage(readconfig('site_logo')) }}" width="200px" alt="brand-logo">
                     </a>
-                    <h3 class="form-title">Sign in</h3>
-                    <p class="form-des">Welcome back! Sign in to access your account.</p>
+                    <h3 class="form-title">Ulgama gir</h3>
+                    <p class="form-des">OWAZ KAFE dolandyrys ulgamy</p>
                 </div>
                 <div class="authentication-form-content">
                     <div class="row g-4">
@@ -47,10 +47,10 @@
                         <div class="col-sm-6 col-lg-12 col-xl-6">
                             <div class="form-group">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" placeholder="Enter email"
+                                <input type="email" class="form-control" id="email" placeholder="Email"
                                     autocomplete="off" name="email" required>
                                 <div class="invalid-feedback">
-                                    Please enter a valid email address.
+                                    Dogry email adresini giriziň.
                                 </div>
                             </div>
                         </div>
@@ -58,10 +58,10 @@
                         <div class="col-sm-6 col-lg-12 col-xl-6">
                             <div class="form-group">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" placeholder="Enter password"
+                                <input type="password" class="form-control" id="password" placeholder="Parol"
                                     autocomplete="off" name="password" required>
                                 <div class="invalid-feedback">
-                                    Please enter a password.
+                                    Paroly giriziň.
                                 </div>
                                 <div class="show-hide toggle-password" id="toggleIcon">
                                     <span class="eye-icon">
@@ -106,9 +106,9 @@
                                     <div class="customcheck ">
                                         <input type="checkbox" id="rememberMe" class="customcheck-box"
                                             name="remember_me" hidden>
-                                        <label for="rememberMe" class="customcheck-label">Remember me</label>
+                                        <label for="rememberMe" class="customcheck-label">Ýatda sakla</label>
                                     </div>
-                                    <a href="{{ route('forget.password') }}" class="forget">Forgot password</a>
+                                    <a href="{{ route('forget.password') }}" class="forget">Paroly unutdyňyzmy?</a>
                                 </div>
                             </div>
                             {{-- <div class="single-row">
@@ -126,11 +126,10 @@
 
                         <div class="col-sm-6 col-lg-12 col-xl-6">
                             <div class="form-group">
-                                <button type="submit" class="create-account-btn w-100">Sign In</button>
+                                <button type="submit" class="create-account-btn w-100">Giriş</button>
                             </div>
                             <div class="form-group"> <br>
-                            <p><b>User:</b> demo@qtecsolution.net</p>
-                            <p><b>Password:</b> 87654321</p>
+                            
                             </div>
                         </div>
 
@@ -171,9 +170,7 @@
                         </div> -->
                     </div>
                 </div>
-                <div class="authentication-form-footer">
-                    <p>Don’t have an account? <a href="{{ route('signup') }}">Sign up </a></p>
-                </div>
+                
             </form>
         </div>
     </section>

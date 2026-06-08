@@ -31,7 +31,7 @@
   'contact_email' => 'owaz@gmail.com',
   'working_hour' => 'Mon - Sun  08:00 - 22:00',
   'custom_css' => '',
-  'note_to_customer_invoice' => 'Thank you! Please come again.',
+  'note_to_customer_invoice' => 'Sag boluň! Gaýdyp geliň!',
   'is_show_logo_invoice' => '1',
   'is_show_site_invoice' => '1',
   'is_show_phone_invoice' => '1',

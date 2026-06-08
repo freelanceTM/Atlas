@@ -1,6 +1,6 @@
 @extends('backend.master')
 
-@section('title', 'Create Category')
+@section('title', 'Новая категория')
 
 @section('content')
 <div class="card">
@@ -54,7 +54,7 @@
         </div>
         <div class="row">
           <div class="col-md-6">
-            <button type="submit" class="btn bg-gradient-primary">Create</button>
+            <button type="submit" class="btn bg-gradient-primary">Создать</button>
           </div>
         </div>
       </div>

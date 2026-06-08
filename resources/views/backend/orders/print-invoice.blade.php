@@ -16,10 +16,10 @@
           </h2>
         </div>
         <div class="col-4">
-          <h4 class="page-header">Invoice</h4>
+          <h4 class="page-header">Hasap-faktura</h4>
         </div>
         <div class="col-4">
-          <small class="float-right text-small">Date: {{date('d/m/Y')}}</small>
+          <small class="float-right text-small">Senesi: {{date('d/m/Y')}}</small>
         </div>
       </div>
 
@@ -27,32 +27,32 @@
       <div class="row invoice-info">
         <div class="col-sm-5 invoice-col">
           @if(readConfig('is_show_customer_invoice'))
-          To
+          Alyjy
           <address>
-            <strong>Name: {{$order->customer->name??"N/A"}}</strong><br>
-            Address: {{$order->customer->address??"N/A"}}<br>
-            Phone: {{$order->customer->phone??"N/A"}}<br>
+            <strong>Ady: {{$order->customer->name??"N/A"}}</strong><br>
+            Adresi: {{$order->customer->address??"N/A"}}<br>
+            Telefon: {{$order->customer->phone??"N/A"}}<br>
           </address>
           @endif
         </div>
         <div class="col-sm-4 invoice-col">
-          From
+          Satyjy
           <address>
-            @if(readConfig('is_show_site_invoice'))<strong>Name:{{ readConfig('site_name') }}</strong><br> @endif
-            @if(readConfig('is_show_address_invoice'))Address: {{ readConfig('contact_address') }}<br>@endif
-            @if(readConfig('is_show_phone_invoice'))Phone: {{ readConfig('contact_phone') }}<br>@endif
+            @if(readConfig('is_show_site_invoice'))<strong>Ady: {{ readConfig('site_name') }}</strong><br> @endif
+            @if(readConfig('is_show_address_invoice'))Adresi: {{ readConfig('contact_address') }}<br>@endif
+            @if(readConfig('is_show_phone_invoice'))Telefon: {{ readConfig('contact_phone') }}<br>@endif
             @if(readConfig('is_show_email_invoice'))Email: {{ readConfig('contact_email') }}<br>@endif
           </address>
         </div>
         <div class="col-sm-3 invoice-col">
-          Info <br>
-          Sale ID: #{{$order->id}}<br>
-          Sale Date: {{date('d/m/Y', strtotime($order->created_at))}}<br>
-          Order Type:
+          Maglumat <br>
+          Sargyt No: #{{$order->id}}<br>
+          Senesi: {{date('d/m/Y', strtotime($order->created_at))}}<br>
+          Gornusi:
           @if(($order->order_type ?? 'takeaway') === 'dine_in')
-            <span style="display:inline-block;background:#e8724a;color:#fff;padding:1px 8px;border-radius:4px;font-weight:600;">🍽 Dine-in</span>
+            <span style="display:inline-block;background:#e8724a;color:#fff;padding:1px 8px;border-radius:4px;font-weight:600;">🍽 Zalda</span>
           @else
-            <span style="display:inline-block;background:#555;color:#fff;padding:1px 8px;border-radius:4px;font-weight:600;">🥡 Takeaway</span>
+            <span style="display:inline-block;background:#555;color:#fff;padding:1px 8px;border-radius:4px;font-weight:600;">🥡 Alyp gitmek</span>
           @endif
         </div>
       </div>
@@ -63,11 +63,11 @@
           <table class="table table-striped">
             <thead>
               <tr>
-                <th>SN</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price {{currency()->symbol??''}}</th>
-                <th>Subtotal {{currency()->symbol??''}}</th>
+                <th>No</th>
+                <th>Haryt ady</th>
+                <th>Mukdary</th>
+                <th>Bahasy {{currency()->symbol??''}}</th>
+                <th>Jemi {{currency()->symbol??''}}</th>
               </tr>
             </thead>
             <tbody>
@@ -100,23 +100,23 @@
           <div class="table-responsive">
             <table class="table">
               <tr>
-                <th style="width:50%">Subtotal:</th>
+                <th style="width:50%">Jemi:</th>
                 <td class="text-right">{{currency()->symbol.' '.number_format($order->sub_total,2,'.',',')}}</td>
               </tr>
               <tr>
-                <th>Discount:</th>
+                <th>Arzanladys:</th>
                 <td class="text-right">{{currency()->symbol.' '.number_format($order->discount,2,'.',',')}}</td>
               </tr>
               <tr>
-                <th>Total:</th>
+                <th>Tolemeli:</th>
                 <td class="text-right">{{currency()->symbol.' '.number_format($order->total,2,'.',',')}}</td>
               </tr>
               <tr>
-                <th>Paid:</th>
+                <th>Tolenen:</th>
                 <td class="text-right">{{currency()->symbol.' '.number_format($order->paid,2,'.',',')}}</td>
               </tr>
               <tr>
-                <th>Due:</th>
+                <th>Galyk:</th>
                 <td class="text-right">{{currency()->symbol.' '.number_format($order->due,2,'.',',')}}</td>
               </tr>
             </table>
@@ -127,7 +127,7 @@
       <div class="row no-print">
         <div class="col-12">
           <button type="button" onclick="window.print()" class="btn btn-success float-right">
-            <i class="fas fa-print"></i> Print
+            <i class="fas fa-print"></i> Cap et
           </button>
         </div>
       </div>

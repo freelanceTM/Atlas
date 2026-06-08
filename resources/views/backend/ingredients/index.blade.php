@@ -4,13 +4,13 @@
 @section('content')
 <div class="card">
   <div class="card-header d-flex justify-content-between align-items-center">
-    <h3 class="card-title"><i class="fas fa-flask mr-2"></i> Ingredients Stock</h3>
+    <h3 class="card-title"><i class="fas fa-flask mr-2"></i> Склад ингредиентов</h3>
     <div>
       <a href="{{ route('backend.admin.ingredients.report') }}" class="btn btn-info btn-sm mr-1">
-        <i class="fas fa-chart-bar"></i> Report
+        <i class="fas fa-chart-bar"></i> Отчёт
       </a>
       <a href="{{ route('backend.admin.ingredients.create') }}" class="btn btn-sm" style="background:#e8724a;color:#fff;">
-        <i class="fas fa-plus-circle"></i> Add Ingredient
+        <i class="fas fa-plus-circle"></i> Добавить
       </a>
     </div>
   </div>
@@ -28,12 +28,12 @@
         <thead style="background:#f8f9fa;">
           <tr>
             <th>#</th>
-            <th>Name</th>
-            <th>Unit</th>
-            <th>Current Stock</th>
-            <th>Cost / Unit</th>
-            <th>Stock Value</th>
-            <th>Actions</th>
+            <th>Название</th>
+            <th>Ед. изм.</th>
+            <th>Остаток</th>
+            <th>Цена / ед.</th>
+            <th>Сумма</th>
+            <th>Действия</th>
           </tr>
         </thead>
         <tbody>
@@ -56,7 +56,7 @@
             <td>
               <a href="{{ route('backend.admin.ingredients.arrival', $ingredient->id) }}"
                  class="btn btn-sm btn-success" title="Add Stock">
-                <i class="fas fa-plus"></i> Arrival
+                <i class="fas fa-plus"></i> Приход
               </a>
               <a href="{{ route('backend.admin.ingredients.edit', $ingredient->id) }}"
                  class="btn btn-sm btn-primary" title="Edit">
@@ -64,7 +64,7 @@
               </a>
               <form action="{{ route('backend.admin.ingredients.destroy', $ingredient->id) }}"
                     method="POST" style="display:inline;"
-                    onsubmit="return confirm('Delete this ingredient?')">
+                    onsubmit="return confirm('Удалить ингредиент?')">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-sm btn-danger" title="Delete">
                   <i class="fas fa-trash"></i>
