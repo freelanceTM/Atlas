@@ -1,180 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ru">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>
-        @yield('title', 'Dashboard') | {{ readConfig('site_name') }}
-    </title>
-
-    <!-- FAVICON ICON -->
+    <title>@yield('title', 'Панель') | {{ readConfig('site_name') }}</title>
     <link rel="shortcut icon" href="{{ assetImage(readconfig('favicon_icon')) }}" type="image/svg+xml">
-
-    <!-- FAVICON ICON APPLE -->
-    <link href="{{ assetImage(readconfig('favicon_icon_apple')) }}" rel="apple-touch-icon">
-    <link href="{{ assetImage(readconfig('favicon_icon_apple')) }}" rel="apple-touch-icon" sizes="72x72">
-    <link href="{{ assetImage(readconfig('favicon_icon_apple')) }}" rel="apple-touch-icon" sizes="114x114">
-    <link href="{{ assetImage(readconfig('favicon_icon_apple')) }}" rel="apple-touch-icon" sizes="144x144">
-
-    <!-- Google Font: Source Sans Pro -->
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-    <!-- Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('plugins/fontawesome-free/css/all.min.css') }}">
-    <!-- Ionicons -->
-    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
-    <!-- Tempusdominus Bootstrap 4 -->
-    <link rel="stylesheet"
-        href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
-    <!-- iCheck -->
+    <link rel="stylesheet" href="{{ asset('plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
-    <!-- JQVMap -->
-    <link rel="stylesheet" href="{{ asset('plugins/jqvmap/jqvmap.min.css') }}">
-    <!-- Theme style -->
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}">
-    <!-- overlayScrollbars -->
     <link rel="stylesheet" href="{{ asset('plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
-    <!-- Daterange picker -->
     <link rel="stylesheet" href="{{ asset('plugins/daterangepicker/daterangepicker.css') }}">
-    <!-- summernote -->
     <link rel="stylesheet" href="{{ asset('plugins/summernote/summernote-bs4.min.css') }}">
-    <!-- Select2 -->
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
-    <!-- dropzonejs -->
     <link rel="stylesheet" href="{{ asset('plugins/dropzone/min/dropzone.min.css') }}">
-    {{-- datatable --}}
     <link rel="stylesheet" href="{{ asset('assets/css/datatable/datatable.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/datatable/buttons.dataTables.min.css') }}">
-    {{-- custom style --}}
     <link rel="stylesheet" href="{{ asset('css/custom-style.css') }}">
-
-    <style>
-        /* Inline overrides — detailed styles live in custom-style.css */
-        body { font-family: 'Source Sans Pro', sans-serif; }
-    </style>
     @stack('style')
     @viteReactRefresh
     @vite('resources/js/app.jsx')
 </head>
-
 <body class="hold-transition sidebar-mini layout-fixed sidebar-dark-primary">
-
     <x-simple-alert />
-
     <div class="wrapper">
-
-        <!-- Preloader -->
-        <!-- <div class="preloader flex-column justify-content-center align-items-center">
-            <img class="animation__shake" src="{{ assetImage(readconfig('site_logo')) }}" alt="Logo" height="60"
-                width="60">
-        </div> -->
-
-        <!-- Navbar -->
         @include('backend.layouts.navbar')
-        <!-- /.navbar -->
-
-        <!-- Main Sidebar Container -->
-        <aside class="main-sidebar elevation-4">
-            <!-- Restaurant Brand Bar -->
-            <a href="{{ route('frontend.home') }}" class="restaurant-brand">
-                <div class="brand-icon">
-                    <i class="fas fa-utensils"></i>
+        <aside class="main-sidebar elevation-0">
+            <a href="{{ route('frontend.home') }}" class="brand-link px-3">
+                <div class="brand-icon-wrap" style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#5b7cfa,#3d5ce8);display:inline-flex;align-items:center;justify-content:center;margin-right:8px;flex-shrink:0">
+                    <i class="fas fa-utensils" style="color:#fff;font-size:13px"></i>
                 </div>
-                <div>
-                    <span class="brand-name">{{ readConfig('site_name') }}</span>
-                    <span class="brand-sub">Restaurant POS</span>
-                </div>
+                <span class="brand-text font-weight-bold">{{ readConfig('site_name') }}</span>
             </a>
-
-            <!-- Sidebar -->
             @include('backend.layouts.sidebar')
-            <!-- /.sidebar -->
-
         </aside>
-
-        <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
-            <!-- Content Header (Page header) -->
             <div class="content-header">
                 <div class="container-fluid">
-                    <div class="row mb-2">
+                    <div class="row">
                         <div class="col-sm-6">
-                            <h1 class="m-0">
-                                @yield('title')
-                            </h1>
-                        </div><!-- /.col -->
-                    </div><!-- /.row -->
-                </div><!-- /.container-fluid -->
-            </div>
-            <!-- /.content-header -->
-
-
-            <!-- Main content -->
-            <section class="content">
-                <!-- container-fluid -->
-                <div class="container-fluid">
-
-                    <!-- content -->
-                    @yield('content')
-                    <!-- /.content -->
-
+                            <h1 class="m-0" style="font-size:18px;font-weight:700">@yield('title')</h1>
+                        </div>
+                    </div>
                 </div>
-                <!-- /.container-fluid -->
+            </div>
+            <section class="content">
+                <div class="container-fluid">
+                    @yield('content')
+                </div>
             </section>
-            <!-- /.Main content -->
         </div>
-        <!-- /.content-wrapper -->
-
         @include('backend.layouts.footer')
-
     </div>
-    <!-- ./wrapper -->
-
-    <!-- jQuery -->
     <script src="{{ asset('plugins/jquery/jquery.min.js') }}"></script>
-    <!-- jQuery UI 1.11.4 -->
     <script src="{{ asset('plugins/jquery-ui/jquery-ui.min.js') }}"></script>
-    <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
-    <script>
-        $.widget.bridge('uibutton', $.ui.button)
-    </script>
-    <!-- Bootstrap 4 -->
+    <script>$.widget.bridge('uibutton', $.ui.button)</script>
     <script src="{{ asset('plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <!-- ChartJS -->
     <script src="{{ asset('plugins/chart.js/Chart.min.js') }}"></script>
-    <!-- Sparkline -->
-    <script src="{{ asset('plugins/sparklines/sparkline.js') }}"></script>
-    <!-- JQVMap -->
-    <script src="{{ asset('plugins/jqvmap/jquery.vmap.min.js') }}"></script>
-    <script src="{{ asset('plugins/jqvmap/maps/jquery.vmap.usa.js') }}"></script>
-    <!-- jQuery Knob Chart -->
-    <script src="{{ asset('plugins/jquery-knob/jquery.knob.min.js') }}"></script>
-    <!-- daterangepicker -->
     <script src="{{ asset('plugins/moment/moment.min.js') }}"></script>
     <script src="{{ asset('plugins/daterangepicker/daterangepicker.js') }}"></script>
-    <!-- Tempusdominus Bootstrap 4 -->
     <script src="{{ asset('plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js') }}"></script>
-    <!-- Summernote -->
     <script src="{{ asset('plugins/summernote/summernote-bs4.min.js') }}"></script>
-    <!-- overlayScrollbars -->
     <script src="{{ asset('plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
-    <!-- AdminLTE App -->
     <script src="{{ asset('dist/js/adminlte.js') }}"></script>
-    <!-- Select2 -->
     <script src="{{ asset('plugins/select2/js/select2.full.min.js') }}"></script>
-    {{-- custom script --}}
     <script src="{{ asset('js/custom-script.js') }}"></script>
-    <!-- dropzonejs -->
     <script src="{{ asset('plugins/dropzone/min/dropzone.min.js') }}"></script>
-
-    {{-- datatable --}}
     <script src="{{ asset('assets/js/datatable/datatable.js') }}"></script>
     <script src="{{ asset('assets/js/datatable/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('assets/js/datatable/dataTables.buttons.min.js') }}"></script>
-
     @stack('script')
 </body>
-
 </html>

@@ -1,239 +1,189 @@
 @extends('backend.master')
-
-@section('title', 'Dashboard')
-
+@section('title', 'Дашборд')
 @section('content')
-<section class="content">
-    @can('dashboard_view')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon bg-info elevation-1"><i class="fas fa-cog"></i></span>
+<div class="dash-wrap">
 
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sale SubTotal</span>
-                        <span class="info-box-number">
-                            {{currency()->symbol??''}} {{number_format($sub_total,2,'.',',')}}
-                            <small></small>
-                        </span>
-                    </div>
-                    <!-- /.info-box-content -->
-                </div>
-                <!-- /.info-box -->
-            </div>
-            <!-- /.col -->
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box mb-3">
-                    <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-thumbs-up"></i></span>
-
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sale Discount</span>
-                        <span class="info-box-number">{{currency()->symbol??''}} {{number_format($discount,2,'.',',')}}</span>
-                    </div>
-                    <!-- /.info-box-content -->
-                </div>
-                <!-- /.info-box -->
-            </div>
-            <!-- /.col -->
-
-            <!-- fix for small devices only -->
-            <div class="clearfix hidden-md-up"></div>
-
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box mb-3">
-                    <span class="info-box-icon bg-success elevation-1"><i class="fas fa-shopping-cart"></i></span>
-
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sale</span>
-                        <span class="info-box-number">{{currency()->symbol??''}} {{number_format($total,2,'.',',')}}</span>
-                    </div>
-                    <!-- /.info-box-content -->
-                </div>
-                <!-- /.info-box -->
-            </div>
-            <!-- /.col -->
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box mb-3">
-                    <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-users"></i></span>
-
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sale Due </span>
-                        <span class="info-box-number">{{currency()->symbol??''}} {{number_format($due,2,'.',',')}}</span>
-                    </div>
-                    <!-- /.info-box-content -->
-                </div>
-                <!-- /.info-box -->
-            </div>
-            <!-- /.col -->
-        </div>
-
-        <!-- Small boxes (Stat box) -->
-        <div class="row">
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-info">
-                    <div class="inner">
-                        <h3>{{$total_customer}}</h3>
-                        <p>Customers</p>
-                    </div>
-                    <div class="icon">
-                        <i class="ion ion-bag"></i>
-                    </div>
-                    <a href="{{route('backend.admin.customers.index')}}" class="small-box-footer">
-                        More info
-                        <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-            <!-- ./col -->
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-success">
-                    <div class="inner">
-                        <h3>{{$total_product}}</h3>
-                        <p>Products</p>
-                    </div>
-                    <div class="icon">
-                        <i class="ion ion-stats-bars"></i>
-                    </div>
-                    <a href="{{route('backend.admin.products.index')}}" class="small-box-footer">
-                        More info
-                        <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-            <!-- ./col -->
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-warning">
-                    <div class="inner">
-                        <h3>{{$total_order}}</h3>
-                        <p>Sale</p>
-                    </div>
-                    <div class="icon">
-                        <i class="ion ion-person-add"></i>
-                    </div>
-                    <a href="{{route('backend.admin.orders.index')}}" class="small-box-footer">
-                        More info
-                        <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-            <!-- ./col -->
-            <div class="col-lg-3 col-6">
-                <!-- small box -->
-                <div class="small-box bg-danger">
-                    <div class="inner">
-                        <h3>{{$total_sale_item}}</h3>
-                        <p>Sale Item</p>
-                    </div>
-                    <div class="icon">
-                        <i class="ion ion-pie-graph"></i>
-                    </div>
-                    <a href="{{route('backend.admin.orders.index')}}" class="small-box-footer">
-                        More info
-                        <i class="fas fa-arrow-circle-right"></i>
-                    </a>
-                </div>
-            </div>
-            <!-- ./col -->
-        </div>
-        <!-- /.row -->
-
-
-        <div class="row">
-            <div class="col-6">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Daily Total Sales <small>{{ $dateRange }}</small></h5>
-                        <div class="input-group w-auto">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">
-                                    <i class="far fa-calendar-alt"></i>
-                                </span>
-                            </div>
-                            <input type="text" class="form-control" id="reservation" style="width: 180px;">
-                        </div>
-                    </div>
-
-                    <div class="card-body">
-                        <canvas id="dailySaleLineChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Monthly Total Sales <small>for {{ $currentYear }}</small></h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="barChartYear"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+  {{-- KPI CARDS --}}
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-blue">
+      <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Выручка сегодня</div>
+        <div class="kpi-value">{{ currency()->symbol??'₽' }} {{ number_format($todaySale ?? 0, 2) }}</div>
+        <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> За сегодня</div>
+      </div>
     </div>
-    @endcan
-    <!-- /.container-fluid -->
-</section>
-@endsection
+    <div class="kpi-card kpi-green">
+      <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Заказов сегодня</div>
+        <div class="kpi-value">{{ $todayOrder ?? 0 }}</div>
+        <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> За сегодня</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-purple">
+      <div class="kpi-icon"><i class="fas fa-wallet"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Выручка за месяц</div>
+        <div class="kpi-value">{{ currency()->symbol??'₽' }} {{ number_format($thisMonthSale ?? 0, 2) }}</div>
+        <div class="kpi-trend neutral"><i class="fas fa-calendar"></i> Этот месяц</div>
+      </div>
+    </div>
+    <div class="kpi-card kpi-orange">
+      <div class="kpi-icon"><i class="fas fa-shopping-cart"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Заказов за месяц</div>
+        <div class="kpi-value">{{ $thisMonthOrder ?? 0 }}</div>
+        <div class="kpi-trend neutral"><i class="fas fa-calendar"></i> Этот месяц</div>
+      </div>
+    </div>
+  </div>
+
+  {{-- CHARTS ROW --}}
+  <div class="dash-charts-row">
+    <div class="dash-chart-card">
+      <div class="dash-card-head">
+        <span><i class="fas fa-chart-area"></i> Продажи за 7 дней</span>
+      </div>
+      <div class="dash-chart-body">
+        <canvas id="weeklyChart" height="80"></canvas>
+      </div>
+    </div>
+    <div class="dash-chart-card">
+      <div class="dash-card-head">
+        <span><i class="fas fa-chart-bar"></i> Продажи по месяцам</span>
+      </div>
+      <div class="dash-chart-body">
+        <canvas id="monthlyChart" height="80"></canvas>
+      </div>
+    </div>
+  </div>
+
+  {{-- RECENT ORDERS --}}
+  <div class="dash-card">
+    <div class="dash-card-head">
+      <span><i class="fas fa-history"></i> Последние заказы</span>
+      @can('sale_view')
+      <a href="{{ route('backend.admin.orders.index') }}" class="dash-link">Все заказы →</a>
+      @endcan
+    </div>
+    <div class="dash-card-body table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Клиент</th>
+            <th>Сумма</th>
+            <th>Тип</th>
+            <th>Статус</th>
+            <th>Дата</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($latestOrders ?? [] as $order)
+          <tr>
+            <td><span class="order-id">#{{ $order->id }}</span></td>
+            <td>{{ $order->customer->name ?? 'Гость' }}</td>
+            <td><strong>{{ currency()->symbol??'₽' }} {{ number_format($order->total, 2) }}</strong></td>
+            <td>
+              <span class="type-badge {{ $order->order_type === 'dine_in' ? 'type-dine' : 'type-take' }}">
+                {{ $order->order_type === 'dine_in' ? '🍽 В зале' : '🥡 На вынос' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge {{ $order->payment_status === 'paid' ? 'status-paid' : 'status-due' }}">
+                {{ $order->payment_status === 'paid' ? 'Оплачен' : 'Долг' }}
+              </span>
+            </td>
+            <td style="color:var(--dk-text-muted);font-size:12px">{{ $order->created_at->diffForHumans() }}</td>
+          </tr>
+          @empty
+          <tr><td colspan="6" style="text-align:center;color:var(--dk-text-muted);padding:32px">Заказов пока нет</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+@push('style')
+<style>
+.dash-wrap { display:flex; flex-direction:column; gap:20px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.kpi-grid{grid-template-columns:1fr}}
+.kpi-card { background:var(--dk-surface); border:1px solid var(--dk-border); border-radius:14px; padding:20px; display:flex; gap:16px; align-items:flex-start; transition:transform .2s,box-shadow .2s; }
+.kpi-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+.kpi-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.kpi-blue .kpi-icon  { background:rgba(91,124,250,.15); color:#5b7cfa; }
+.kpi-green .kpi-icon { background:rgba(32,201,151,.15); color:#20c997; }
+.kpi-purple .kpi-icon{ background:rgba(168,85,247,.15);  color:#a855f7; }
+.kpi-orange .kpi-icon{ background:rgba(251,191,36,.15);  color:#fbbf24; }
+.kpi-label { font-size:12px; font-weight:500; color:var(--dk-text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.8px; }
+.kpi-value { font-size:26px; font-weight:800; color:var(--dk-text); margin-bottom:6px; }
+.kpi-trend { font-size:11px; font-weight:500; }
+.kpi-trend.up     { color:#20c997; }
+.kpi-trend.down   { color:#ff5470; }
+.kpi-trend.neutral{ color:var(--dk-text-muted); }
+.dash-charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media(max-width:700px){.dash-charts-row{grid-template-columns:1fr}}
+.dash-chart-card,.dash-card { background:var(--dk-surface); border:1px solid var(--dk-border); border-radius:14px; overflow:hidden; }
+.dash-card-head { display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--dk-border); font-size:13px; font-weight:600; color:var(--dk-text); }
+.dash-card-head i { color:#5b7cfa; margin-right:7px; }
+.dash-link { font-size:12px; color:#5b7cfa; text-decoration:none; }
+.dash-link:hover { text-decoration:underline; }
+.dash-chart-body { padding:16px; }
+.dash-card-body { padding:0; }
+.order-id { font-weight:600; color:#5b7cfa; }
+.type-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.type-dine { background:rgba(168,85,247,.15); color:#a855f7; }
+.type-take { background:rgba(91,124,250,.15); color:#5b7cfa; }
+.status-badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.status-paid { background:rgba(32,201,151,.15); color:#20c997; }
+.status-due  { background:rgba(255,84,112,.15); color:#ff5470; }
+</style>
+@endpush
+
 @push('script')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const dailySaleChart = document.getElementById('dailySaleLineChart');
-    const barChartYear = document.getElementById('barChartYear');
-
-    new Chart(dailySaleChart, {
-        type: 'line',
-        data: {
-            labels: @json($dates),
-            datasets: [{
-                label: 'Sales',
-                data: @json($totalAmounts),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    new Chart(barChartYear, {
-        type: 'bar',
-        data: {
-            labels: @json($months),
-            datasets: [{
-                label: 'Sales',
-                data: @json($totalAmountMonth),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-</script>
-<script>
-    $(function() {
-        //Date range picker
-        $('#reservation').daterangepicker().on('apply.daterangepicker', function(e, picker) {
-            let selectedDateRange = picker.startDate.format('YYYY-MM-DD') + ' to ' + picker.endDate.format('YYYY-MM-DD');
-
-            // Update URL with daterange query parameter
-            let url = new URL(window.location.href);
-            url.searchParams.set('daterange', selectedDateRange);
-            window.location.href = url.toString();
-        });
-
-    })
+const chartDefaults = {
+  responsive: true, maintainAspectRatio: true,
+  plugins: { legend: { display: false }, tooltip: { backgroundColor:'#1a1d2e', titleColor:'#e8eaf8', bodyColor:'#8b92b8', borderColor:'#252b45', borderWidth:1 } },
+  scales: {
+    x: { grid: { color:'rgba(255,255,255,.05)' }, ticks: { color:'#8b92b8', font:{size:11} } },
+    y: { grid: { color:'rgba(255,255,255,.05)' }, ticks: { color:'#8b92b8', font:{size:11} } }
+  }
+};
+const weeklyCtx = document.getElementById('weeklyChart');
+if(weeklyCtx) {
+  new Chart(weeklyCtx, {
+    type: 'line',
+    data: {
+      labels: {!! json_encode($weeklySalesLabels ?? ['Пн','Вт','Ср','Чт','Пт','Сб','Вс']) !!},
+      datasets: [{
+        data: {!! json_encode($weeklySalesData ?? [0,0,0,0,0,0,0]) !!},
+        borderColor:'#5b7cfa', backgroundColor:'rgba(91,124,250,.1)',
+        fill:true, tension:.4, pointBackgroundColor:'#5b7cfa', pointRadius:4
+      }]
+    },
+    options: chartDefaults
+  });
+}
+const monthlyCtx = document.getElementById('monthlyChart');
+if(monthlyCtx) {
+  new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+      labels: {!! json_encode($monthlySalesLabels ?? ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек']) !!},
+      datasets: [{
+        data: {!! json_encode($monthlySalesData ?? array_fill(0,12,0)) !!},
+        backgroundColor:'rgba(32,201,151,.5)', borderColor:'#20c997', borderWidth:2, borderRadius:6
+      }]
+    },
+    options: chartDefaults
+  });
+}
 </script>
 @endpush
+@endsection

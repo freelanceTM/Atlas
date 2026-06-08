@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap/bootstrap.min.css') }}">
     <!-- APP-CSS -->
     <link rel="stylesheet" href="{{ asset('assets/css/style.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/login-dark.css') }}">
 </head>
 
 <body>

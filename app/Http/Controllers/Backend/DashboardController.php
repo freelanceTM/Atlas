@@ -15,6 +15,10 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
+        $today      = Carbon::today();
+        $monthStart = Carbon::now()->startOfMonth();
+
+        // All-time stats (kept for backwards compat)
         $orders = Order::get();
         $data = [
             'sub_total'       => $orders->sum('sub_total'),
@@ -28,46 +32,63 @@ class DashboardController extends Controller
             'total_sale_item' => OrderProduct::sum('quantity'),
         ];
 
-        $startDate = Carbon::now()->subDays(30)->format('Y-m-d');
-        $endDate   = Carbon::now()->format('Y-m-d');
-        if ($request->has('daterange')) {
-            $dates = explode(' to ', $request->query('daterange'));
-            if (count($dates) == 2) {
-                $startDate = Carbon::parse($dates[0])->format('Y-m-d');
-                $endDate   = Carbon::parse($dates[1])->format('Y-m-d');
-            }
-        }
+        // Today's KPIs
+        $todayOrders = Order::whereDate('created_at', $today)->get();
+        $data['todaySale']  = $todayOrders->sum('total');
+        $data['todayOrder'] = $todayOrders->count();
 
-        // FIX: DATE() is standard SQL — works on SQLite and MySQL
-        $dailyTotals = OrderTransaction::selectRaw('DATE(created_at) as date, SUM(amount) as total_amount')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->groupBy('date')
-            ->orderBy('date', 'DESC')
+        // This month's KPIs
+        $monthOrders = Order::whereBetween('created_at', [$monthStart, Carbon::now()])->get();
+        $data['thisMonthSale']  = $monthOrders->sum('total');
+        $data['thisMonthOrder'] = $monthOrders->count();
+
+        // Latest 10 orders
+        $data['latestOrders'] = Order::with('customer')
+            ->latest()
+            ->take(10)
             ->get();
 
+        // Weekly chart (last 7 days)
+        $weekLabels = [];
+        $weekData   = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = Carbon::today()->subDays($i);
+            $rusDay = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][$day->dayOfWeek];
+            $weekLabels[] = $rusDay . ' ' . $day->format('d');
+            $weekData[] = round(Order::whereDate('created_at', $day)->sum('total'), 2);
+        }
+        $data['weeklySalesLabels'] = $weekLabels;
+        $data['weeklySalesData']   = $weekData;
+
+        // Monthly chart (current year)
+        $currentYear = now()->year;
+        $monthNames  = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+        $monthSales  = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthSales[] = round(Order::whereYear('created_at', $currentYear)->whereMonth('created_at', $i)->sum('total'), 2);
+        }
+        $data['monthlySalesLabels'] = $monthNames;
+        $data['monthlySalesData']   = $monthSales;
+
+        // Legacy chart data (keep for any old templates)
+        $startDate = Carbon::now()->subDays(30)->format('Y-m-d');
+        $endDate   = Carbon::now()->format('Y-m-d');
+        $dailyTotals = OrderTransaction::selectRaw('DATE(created_at) as date, SUM(amount) as total_amount')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date')->orderBy('date', 'DESC')->get();
         $data['dates']       = $dailyTotals->pluck('date')->toArray();
         $data['totalAmounts'] = $dailyTotals->pluck('total_amount')->toArray();
         $data['dateRange']   = 'from ' . $startDate . ' to ' . $endDate;
-
-        $currentYear = now()->year;
         $data['currentYear'] = $currentYear;
-
-        // FIX: replaced DATE_FORMAT (MySQL-only) with PHP/Carbon grouping —
-        // fetch the year's transactions, then group by Y-m in PHP (works on any DB)
         $transactions = OrderTransaction::whereYear('created_at', $currentYear)->get();
-
-        $salesData = $transactions->groupBy(function ($item) {
-            return Carbon::parse($item->created_at)->format('Y-m');
-        })->map(fn($group) => $group->sum('amount'));
-
-        $tempMonths          = [];
-        $tempTotalAmountMonth = [];
+        $salesData = $transactions->groupBy(fn($i) => Carbon::parse($i->created_at)->format('Y-m'))
+            ->map(fn($g) => $g->sum('amount'));
+        $tempMonths = $tempTotalAmountMonth = [];
         for ($i = 1; $i <= 12; $i++) {
-            $monthKey              = Carbon::create($currentYear, $i, 1)->format('Y-m');
-            $tempMonths[]          = $monthKey;
-            $tempTotalAmountMonth[] = $salesData[$monthKey] ?? 0;
+            $mk = Carbon::create($currentYear, $i, 1)->format('Y-m');
+            $tempMonths[]          = $mk;
+            $tempTotalAmountMonth[] = $salesData[$mk] ?? 0;
         }
-
         $data['months']           = $tempMonths;
         $data['totalAmountMonth'] = $tempTotalAmountMonth;
 

@@ -1,0 +1,463 @@
+/* ========= ATLAS RESTAURANT THEME ========== */
+
+/* --- CSS Variables --- */
+:root {
+    --rest-primary:     #e8724a;
+    --rest-primary-dk:  #c85834;
+    --rest-primary-lt:  #f4a07e;
+    --rest-secondary:   #2d2d2d;
+    --rest-sidebar-bg:  #1e1e2e;
+    --rest-sidebar-hdr: #15151f;
+    --rest-sidebar-txt: #c8c8d8;
+    --rest-success:     #27ae60;
+    --rest-warning:     #f39c12;
+    --rest-bg:          #f5f3f0;
+    --rest-card-bg:     #ffffff;
+    --rest-border:      #e0dbd4;
+    --rest-shadow:      0 2px 12px rgba(232,114,74,0.10);
+}
+
+/* ---- Primary brand colour (overrides AdminLTE blue) ---- */
+.bg-gradient-primary,
+.bg-gradient-primary.btn {
+    background: var(--rest-primary) linear-gradient(160deg, var(--rest-primary-lt), var(--rest-primary)) repeat-x !important;
+    border-color: var(--rest-primary) !important;
+    color: #fff !important;
+}
+.bg-gradient-primary.btn:hover {
+    background: var(--rest-primary-dk) linear-gradient(160deg, var(--rest-primary), var(--rest-primary-dk)) repeat-x !important;
+    border-color: var(--rest-primary-dk) !important;
+}
+.bg-primary { background: var(--rest-primary) !important; }
+.text-primary { color: var(--rest-primary) !important; }
+a { color: var(--rest-primary-dk); }
+a:hover { color: var(--rest-primary); }
+
+/* ---- Sidebar dark background ---- */
+.main-sidebar {
+    background-color: var(--rest-sidebar-bg) !important;
+    box-shadow: 3px 0 14px rgba(0,0,0,0.40) !important;
+}
+
+/* Active nav link */
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+.sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active:hover,
+.sidebar-light-lightblue .nav-sidebar > .nav-item > .nav-link.active {
+    background: linear-gradient(90deg, var(--rest-primary) 0%, var(--rest-primary-dk) 100%) !important;
+    color: #fff !important;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(232,114,74,0.35);
+}
+
+/* Hover nav link */
+.main-sidebar .nav-sidebar > .nav-item > .nav-link:hover {
+    background: rgba(232,114,74,0.15) !important;
+    border-radius: 6px;
+    color: #fff !important;
+}
+
+.main-sidebar .nav-link {
+    color: var(--rest-sidebar-txt) !important;
+    font-size: 13.5px;
+    padding: 8px 10px !important;
+    margin: 1px 8px !important;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+.main-sidebar .nav-link:hover { color: #fff !important; }
+.main-sidebar .nav-icon { color: var(--rest-primary-lt) !important; }
+.main-sidebar .nav-link.active .nav-icon { color: #fff !important; }
+.main-sidebar .nav-header {
+    color: rgba(200,200,216,0.45) !important;
+    font-size: 10px !important;
+    letter-spacing: 1.5px;
+    padding: 14px 20px 4px !important;
+}
+.main-sidebar .nav-treeview > .nav-item > .nav-link {
+    padding-left: 28px !important;
+    font-size: 13px;
+}
+
+/* ---- Restaurant brand bar (sidebar top) ---- */
+.restaurant-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 14px 14px;
+    background: var(--rest-sidebar-hdr);
+    border-bottom: 1px solid rgba(232,114,74,0.20);
+    text-decoration: none !important;
+}
+.restaurant-brand .brand-icon {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, var(--rest-primary), var(--rest-primary-dk));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(232,114,74,0.45);
+}
+.restaurant-brand .brand-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+    display: block;
+}
+.restaurant-brand .brand-sub {
+    font-size: 10px;
+    color: var(--rest-primary-lt);
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    display: block;
+}
+
+/* ---- Sidebar user panel ---- */
+.sidebar-user-panel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    margin-bottom: 4px;
+}
+.sidebar-user-panel .user-avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(232,114,74,0.25);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--rest-primary-lt);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.sidebar-user-panel .user-info-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    display: block;
+    line-height: 1.2;
+}
+.sidebar-user-panel .user-info-role {
+    font-size: 10px;
+    color: var(--rest-sidebar-txt);
+    display: block;
+}
+
+/* ---- Navbar ---- */
+.main-header.navbar {
+    background: #fff !important;
+    border-bottom: 2px solid var(--rest-border) !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07) !important;
+}
+.main-header .nav-link { color: #666 !important; }
+.main-header .nav-link:hover { color: var(--rest-primary) !important; }
+.main-header .navbar-badge { background: var(--rest-primary) !important; }
+
+/* ---- Content area ---- */
+.content-wrapper {
+    background-color: var(--rest-bg) !important;
+}
+.main-footer {
+    background-color: var(--rest-bg) !important;
+    border-top: 1px solid var(--rest-border);
+    color: #999;
+    font-size: 12.5px;
+}
+.preloader { background-color: var(--rest-bg) !important; }
+
+/* ---- Cards ---- */
+.card {
+    border: 1px solid var(--rest-border) !important;
+    border-radius: 10px !important;
+    box-shadow: var(--rest-shadow) !important;
+}
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    background: #fff !important;
+    border-bottom: 1px solid var(--rest-border) !important;
+    font-weight: 600;
+}
+.elevation-3,
+.elevation-4 {
+    box-shadow: var(--rest-shadow) !important;
+    background: transparent !important;
+}
+
+/* ---- Info boxes (dashboard stats) ---- */
+.info-box {
+    border-radius: 10px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.07) !important;
+    border: 1px solid var(--rest-border) !important;
+    overflow: hidden;
+    transition: transform 0.18s;
+}
+.info-box:hover { transform: translateY(-2px); }
+.info-box-icon { border-radius: 0 !important; }
+
+.small-box {
+    border-radius: 10px !important;
+    overflow: hidden;
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+.small-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13) !important;
+}
+
+/* ---- Buttons ---- */
+.btn {
+    border-radius: 6px !important;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.18s ease;
+}
+.btn-sm { border-radius: 5px !important; font-size: 12px; }
+.btn-success  { background-color: var(--rest-success) !important; border-color: var(--rest-success) !important; }
+.btn-warning  { background-color: var(--rest-warning) !important; border-color: var(--rest-warning) !important; color: #fff !important; }
+.btn-secondary { border-radius: 6px !important; }
+
+/* ---- Tables ---- */
+.table thead th {
+    background: #f8f6f4;
+    border-bottom: 2px solid var(--rest-border);
+    font-weight: 700;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #666;
+}
+.table-hover tbody tr:hover { background: rgba(232,114,74,0.04); }
+.table td { vertical-align: middle; }
+
+/* ---- Badges ---- */
+.badge.bg-primary    { background-color: var(--rest-primary) !important; }
+.badge.bg-success    { background-color: var(--rest-success) !important; }
+.badge.bg-danger     { border-radius: 4px; }
+
+/* ---- Breadcrumb & page title ---- */
+.content-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--rest-secondary);
+}
+.breadcrumb-item.active { color: var(--rest-primary); }
+.breadcrumb-item + .breadcrumb-item::before { color: #aaa; }
+
+/* ---- Form inputs ---- */
+.form-control:focus {
+    border-color: var(--rest-primary) !important;
+    box-shadow: 0 0 0 0.18rem rgba(232,114,74,0.18) !important;
+}
+.form-control {
+    border-radius: 6px;
+    font-size: 13.5px;
+}
+
+/* ---- Select2 ---- */
+.select2-container--default .select2-selection--single {
+    height: calc(1.5em + 0.75rem + 2px) !important;
+    border-radius: 6px !important;
+}
+.select2-container--default .select2-results__option--highlighted {
+    background-color: var(--rest-primary) !important;
+}
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: var(--rest-primary) !important;
+    box-shadow: 0 0 0 0.18rem rgba(232,114,74,0.18) !important;
+}
+
+/* ---- POS Product Cards ---- */
+.order-product .item {
+    float: left;
+    border: 1.5px solid var(--rest-border);
+    border-radius: 10px;
+    background: #fff;
+    margin: 0 5px 10px 5px;
+    transition: all 0.18s ease;
+    cursor: pointer;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+.order-product .item:hover {
+    border-color: var(--rest-primary);
+    box-shadow: 0 5px 16px rgba(232,114,74,0.28);
+    transform: translateY(-3px);
+}
+.order-product .item img {
+    width: 100px;
+    height: 100px;
+    max-width: 100%;
+    object-fit: cover;
+    display: block;
+}
+.order-product .item h5 {
+    font-size: 12.5px;
+    text-align: center;
+    padding: 5px 6px 7px;
+    font-weight: 600;
+    color: var(--rest-secondary);
+    margin: 0;
+}
+
+/* ---- POS Cart ---- */
+.user-cart .card { height: 420px; }
+.user-cart .qty  { width: 45px; float: left; text-align: center; }
+
+.products-card-container {
+    max-height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1.5px solid var(--rest-border);
+    border-radius: 8px;
+    padding: 10px;
+    background: #faf9f7;
+}
+.products-card-container::-webkit-scrollbar { width: 5px; }
+.products-card-container::-webkit-scrollbar-track { background: #f0ece8; }
+.products-card-container::-webkit-scrollbar-thumb {
+    background: var(--rest-primary-lt);
+    border-radius: 4px;
+}
+
+.product-name {
+    margin-bottom: 0;
+    font-weight: 600;
+    overflow: hidden;
+    white-space: normal;
+    text-overflow: ellipsis;
+    color: var(--rest-secondary);
+}
+.product-details p {
+    margin: 0;
+    max-height: 3.6em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12.5px;
+    color: #777;
+}
+
+/* ---- Product grid images ---- */
+.product-list .product-img {
+    max-width: 70px;
+    max-height: 70px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+/* ---- Spinner/qty input ---- */
+.qty {
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: center;
+}
+.qty::-webkit-inner-spin-button,
+.qty::-webkit-outer-spin-button { display: none; }
+
+/* ---- Toggle switch ---- */
+.switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s; transition: .4s;
+}
+.slider:before {
+    position: absolute; content: "";
+    height: 16px; width: 16px;
+    left: 2px; bottom: 2px;
+    background-color: white;
+    -webkit-transition: .4s; transition: .4s;
+}
+input:checked + .slider { background-color: var(--rest-primary); }
+input:focus  + .slider { box-shadow: 0 0 1px var(--rest-primary); }
+input:checked + .slider:before {
+    -webkit-transform: translateX(20px);
+    -ms-transform: translateX(20px);
+    transform: translateX(20px);
+}
+.slider.round { border-radius: 20px; }
+.slider.round:before { border-radius: 50%; }
+
+/* ---- Image upload ---- */
+.image-upload-container {
+    border: 2px dashed var(--rest-primary-lt);
+    border-radius: 8px;
+    background-color: #fdf9f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 200px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.image-upload-container:hover { border-color: var(--rest-primary); }
+.thumb-preview {
+    width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: center;
+    overflow: hidden;
+}
+#thumbnailPreview {
+    max-width: 100%; max-height: 100%;
+    object-fit: cover;
+}
+.upload-text {
+    display: flex; flex-direction: column; align-items: center;
+    color: var(--rest-primary-lt);
+    text-align: center;
+}
+.upload-text i { font-size: 24px; margin-bottom: 5px; }
+
+/* ---- Site logo ---- */
+.site-logo-placeholder { width: auto; max-width: 260px; max-height: 80px; }
+
+/* ---- Loading state ---- */
+.loading-more {
+    text-align: center;
+    padding: 10px;
+    font-weight: 600;
+    color: var(--rest-primary);
+}
+
+/* ---- POS responsive table ---- */
+.responsive-table { height: 100%; overflow-y: scroll; }
+
+/* ---- POS receipt ---- */
+.receipt-container {
+    border: 1px dotted #999 !important;
+    padding: 12px !important;
+    border-radius: 4px;
+}
+
+/* ---- Restaurant lifecycle badge helpers ---- */
+.badge-kitchen-new       { background: #6c757d; color: #fff; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
+.badge-kitchen-preparing { background: var(--rest-warning); color: #fff; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
+.badge-kitchen-ready     { background: var(--rest-success); color: #fff; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
+.badge-kitchen-served    { background: #17a2b8; color: #fff; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
+.badge-kitchen-closed    { background: var(--rest-secondary); color: #fff; border-radius: 4px; padding: 3px 7px; font-size: 11px; }
+
+/* ---- Table status cards (for future table management) ---- */
+.table-card {
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    border: 2px solid var(--rest-border);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.table-card:hover { border-color: var(--rest-primary); box-shadow: 0 4px 12px rgba(232,114,74,0.20); }
+.table-card.occupied  { border-color: var(--rest-primary); background: rgba(232,114,74,0.07); }
+.table-card.available { border-color: var(--rest-success); background: rgba(39,174,96,0.06); }
+
+/* ---- Animations ---- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.card { animation: fadeInUp 0.22s ease both; }
