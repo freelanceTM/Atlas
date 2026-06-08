@@ -12,16 +12,28 @@ class AdminMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * FIX: Добавлена проверка is_suspended.
+     * Риск: заблокированный администратор мог продолжать работать
+     * до тех пор, пока его сессия не истекала.
      */
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('login')->with('error', 'You are not logged in');
+            return redirect()->route("login")->with("error", "You are not logged in");
         }
 
-        if (!Auth::user()->hasRole('Admin')) {
-            abort(403, 'Access denied. Admin role required.');
+        $user = Auth::user();
+
+        // FIX: проверка suspended — до проверки роли, чтобы заблокировать любого
+        if ($user->is_suspended) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route("login")->with("error", "Your account has been suspended. Contact an administrator.");
+        }
+
+        if (!$user->hasRole("Admin")) {
+            abort(403, "Access denied. Admin role required.");
         }
 
         return $next($request);

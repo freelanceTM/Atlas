@@ -171,7 +171,7 @@ class PosSecurityTest extends TestCase
     }
 
     /** @test */
-    public function suspended_admin_can_still_access_admin()
+    public function suspended_admin_is_blocked_from_admin()
     {
         $suspendedAdmin = User::factory()->create([
             'name' => 'Suspended Admin',
@@ -182,7 +182,7 @@ class PosSecurityTest extends TestCase
         $suspendedAdmin->assignRole('Admin');
         $this->actingAs($suspendedAdmin);
         $response = $this->get('/admin');
-        $response->assertStatus(200);
+        $response->assertStatus(302);
     }
 
     /** @test */
