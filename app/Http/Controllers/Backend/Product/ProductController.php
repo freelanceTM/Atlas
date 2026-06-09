@@ -49,8 +49,8 @@ class ProductController extends Controller
                 ->addColumn('quantity', fn($data) => $data->quantity . ' ' . optional($data->unit)->short_name)
                 ->addColumn('created_at', fn($data) => $data->created_at->format('d M, Y'))
                 ->addColumn('status', fn($data) => $data->status
-                    ? '<span class="badge bg-primary">Active</span>'
-                    : '<span class="badge bg-danger">Inactive</span>')
+                    ? '<span class="badge bg-success">Активен</span>'
+                    : '<span class="badge bg-secondary">Выкл</span>')
                 ->addColumn('action', function ($data) {
                     return '<div class="btn-group">
                     <button type="button" class="btn bg-gradient-primary btn-flat">Action</button>
@@ -59,20 +59,20 @@ class ProductController extends Controller
                     </button>
                     <div class="dropdown-menu" role="menu">
                       <a class="dropdown-item" href="'.route('backend.admin.products.edit', $data->id). '">
-                    <i class="fas fa-edit"></i> Edit
+                    <i class="fas fa-edit"></i> Изменить
                 </a> <div class="dropdown-divider"></div>
 <form action="' . route('backend.admin.products.destroy', $data->id) . '"method="POST" style="display:inline;">
                    ' . csrf_field() . '
                     ' . method_field("DELETE") . '
-<button type="submit" class="dropdown-item" onclick="return confirm(\'Are you sure ?\')"><i class="fas fa-trash"></i> Delete</button>
+<button type="submit" class="dropdown-item" onclick="return confirm(\'Are you sure ?\')"><i class="fas fa-trash"></i> Удалить</button>
                   </form>
 <div class="dropdown-divider"></div>
   <a class="dropdown-item" href="' . route('backend.admin.purchase.create', ['barcode' => $data->sku]) . '">
-                <i class="fas fa-cart-plus"></i> Purchase
+                <i class="fas fa-cart-plus"></i> Закупка
             </a>
 <div class="dropdown-divider"></div>
   <a class="dropdown-item" href="' . route('backend.admin.products.recipes', $data->id) . '">
-    <i class="fas fa-scroll"></i> Manage Recipe
+    <i class="fas fa-scroll"></i> Рецепт
   </a>
                     </div>
                   </div>';

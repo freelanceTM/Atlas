@@ -120,6 +120,40 @@ $(function() {
     typeFilter = $(this).data('type');
     table.ajax.reload();
   });
+
+  // Отмена заказа
+  $(document).on('click', '.btn-cancel', function() {
+    const id  = $(this).data('id');
+    const url = $(this).data('url');
+    Swal.fire({
+      title: 'Отменить заказ #' + id + '?',
+      html: '<p style="color:#aaa;font-size:14px">Товары и ингредиенты вернутся на склад.<br>Действие необратимо.</p>',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e53e3e',
+      cancelButtonColor: '#4a5568',
+      confirmButtonText: '<i class="fas fa-ban"></i> Отменить заказ',
+      cancelButtonText: 'Назад',
+      background: '#13161f',
+      color: '#e8eaf8',
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      $.ajax({
+        url: url, type: 'POST',
+        data: { _token: $('meta[name=csrf-token]').attr('content'), _method: 'DELETE' },
+        success: res => {
+          Swal.fire({ title: 'Готово!', text: res.message, icon: 'success',
+            background: '#13161f', color: '#e8eaf8', timer: 2500, showConfirmButton: false });
+          table.ajax.reload();
+        },
+        error: err => {
+          Swal.fire({ title: 'Ошибка', text: err.responseJSON?.message || 'Попробуйте снова', icon: 'error',
+            background: '#13161f', color: '#e8eaf8' });
+        }
+      });
+    });
+  });
+
 });
 </script>
 @endpush

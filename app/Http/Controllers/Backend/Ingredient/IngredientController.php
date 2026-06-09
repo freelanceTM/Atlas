@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ingredient;
 use App\Models\Product;
 use App\Models\Recipe;
+use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -129,6 +130,17 @@ class IngredientController extends Controller
                     $locked->cost = $data['cost'];
                     $locked->save();
                 }
+
+                // Log to inventory ledger
+                InventoryTransaction::create([
+                    'ingredient_id'  => $locked->id,
+                    'type'           => 'purchase',
+                    'quantity'       => $data['quantity'],
+                    'reference_type' => 'purchase',
+                    'reference_id'   => null,
+                    'user_id'        => auth()->id(),
+                    'note'           => 'Приход на склад',
+                ]);
             });
 
             return redirect()->route('backend.admin.ingredients.index')
@@ -239,4 +251,18 @@ class IngredientController extends Controller
         return redirect()->route('backend.admin.products.recipes', $productId)
             ->with('success', 'Ingredient removed from recipe.');
     }
+
+    // ─────────────────────────────────────────────
+    // INVENTORY LEDGER
+    // ─────────────────────────────────────────────
+
+    public function ledger()
+    {
+        $transactions = InventoryTransaction::with(['ingredient', 'user'])
+            ->orderByDesc('id')
+            ->paginate(50);
+
+        return view('backend.inventory.ledger', compact('transactions'));
+    }
+
 }

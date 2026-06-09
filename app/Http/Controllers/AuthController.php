@@ -297,6 +297,6 @@ class AuthController extends Controller
             return redirect()->route("backend.admin.dashboard");
         }
         Auth::logout();
-        return redirect()->route("login")->with("error", "Access denied. This panel is for administrators only.");
+        return redirect()->route("login")->with("error", "Доступ разрешён только администраторам.");
     }
 }

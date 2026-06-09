@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Backend\Pos;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ingredient;
+use App\Models\InventoryTransaction;
 use App\Models\Order;
 use App\Models\OrderTransaction;
 use App\Models\PosCart;
@@ -26,29 +27,41 @@ class OrderController extends Controller
                 ->addColumn("item", fn($data) => $data->total_item)
                 ->addColumn("order_type", function ($data) {
                     if (($data->order_type ?? "takeaway") === "dine_in") {
-                        return "<span class=\"badge\" style=\"background:#e8724a;color:#fff;border-radius:4px;padding:3px 8px;\">Dine-in</span>";
+                        return "<span class=\"badge\" style=\"background:#e8724a;color:#fff;border-radius:4px;padding:3px 8px;\">В зале</span>";
                     }
-                    return "<span class=\"badge bg-secondary\" style=\"border-radius:4px;padding:3px 8px;\">Takeaway</span>";
+                    return "<span class=\"badge bg-secondary\" style=\"border-radius:4px;padding:3px 8px;\">На вынос</span>";
                 })
                 ->addColumn("sub_total", fn($data) => number_format($data->sub_total, 2, ".", ","))
                 ->addColumn("discount",  fn($data) => number_format($data->discount, 2, ".", ","))
                 ->addColumn("total",     fn($data) => number_format($data->total, 2, ".", ","))
                 ->addColumn("paid",      fn($data) => number_format($data->paid, 2, ".", ","))
                 ->addColumn("due",       fn($data) => number_format($data->due, 2, ".", ","))
-                ->addColumn("status", fn($data) => $data->status
-                    ? "<span class=\"badge bg-primary\">Paid</span>"
-                    : "<span class=\"badge bg-danger\">Due</span>")
+                ->addColumn("status", function ($data) {
+                    if ($data->is_returned) {
+                        return "<span class=\"badge bg-danger\">Отменён</span>";
+                    }
+                    return $data->status
+                        ? "<span class=\"badge bg-success\">Оплачен</span>"
+                        : "<span class=\"badge bg-warning text-dark\">Долг</span>";
+                })
                 ->addColumn("action", function ($data) {
                     $inv  = route("backend.admin.orders.invoice", $data->id);
                     $pos  = route("backend.admin.orders.pos-invoice", $data->id);
                     $coll = route("backend.admin.due.collection", $data->id);
                     $txn  = route("backend.admin.orders.transactions", $data->id);
-                    $btn  = "<a class=\"btn btn-success btn-sm\" href=\"{$inv}\"><i class=\"fas fa-file-invoice\"></i> Invoice</a> ";
-                    $btn .= "<a class=\"btn btn-secondary btn-sm\" href=\"{$pos}\"><i class=\"fas fa-receipt\"></i> Receipt</a> ";
-                    if (!$data->status) {
-                        $btn .= "<a class=\"btn btn-warning btn-sm\" href=\"{$coll}\"><i class=\"fas fa-money-bill\"></i> Collect</a> ";
+                    $cancel = route("backend.admin.orders.cancel", $data->id);
+
+                    $btn  = "<a class=\"btn btn-success btn-sm mb-1\" href=\"{$inv}\"><i class=\"fas fa-file-invoice\"></i> Инвойс</a> ";
+                    $btn .= "<a class=\"btn btn-secondary btn-sm mb-1\" href=\"{$pos}\"><i class=\"fas fa-receipt\"></i> Чек</a> ";
+
+                    if (!$data->is_returned) {
+                        if (!$data->status) {
+                            $btn .= "<a class=\"btn btn-warning btn-sm mb-1\" href=\"{$coll}\"><i class=\"fas fa-money-bill\"></i> Оплатить</a> ";
+                        }
+                        $btn .= "<button class=\"btn btn-danger btn-sm mb-1 btn-cancel\" data-id=\"{$data->id}\" data-url=\"{$cancel}\"><i class=\"fas fa-ban\"></i> Отменить</button> ";
                     }
-                    $btn .= "<a class=\"btn btn-primary btn-sm\" href=\"{$txn}\"><i class=\"fas fa-exchange-alt\"></i> Txn</a>";
+
+                    $btn .= "<a class=\"btn btn-primary btn-sm mb-1\" href=\"{$txn}\"><i class=\"fas fa-exchange-alt\"></i> Транзакции</a>";
                     return $btn;
                 })
                 ->rawColumns(["saleId","customer","item","order_type","sub_total","discount","total","paid","due","status","action"])
@@ -71,7 +84,7 @@ class OrderController extends Controller
         $carts = PosCart::with("product")->where("user_id", auth()->id())->get();
 
         if ($carts->isEmpty()) {
-            return response()->json(["message" => "Cart is empty."], 422);
+            return response()->json(["message" => "Корзина пуста."], 422);
         }
 
         try {
@@ -89,7 +102,7 @@ class OrderController extends Controller
                     $product = $products[$cart->product_id] ?? null;
                     if (!$product || $product->quantity < $cart->quantity) {
                         throw new \DomainException(
-                            "Insufficient product stock for: " . ($product->name ?? "unknown product")
+                            "Недостаточно товара: " . ($product->name ?? "неизвестный товар")
                         );
                     }
                 }
@@ -99,13 +112,15 @@ class OrderController extends Controller
                 foreach ($carts as $cart) {
                     $recipes = Recipe::where("product_id", $cart->product_id)->get();
                     foreach ($recipes as $recipe) {
-                        $needed = $recipe->quantity * $cart->quantity;
-                        $ingredientRequired[$recipe->ingredient_id] =
-                            ($ingredientRequired[$recipe->ingredient_id] ?? 0) + $needed;
+                        $needed = (string) bcmul((string)$recipe->quantity, (string)$cart->quantity, 3);
+                        $ingredientRequired[$recipe->ingredient_id] = bcadd(
+                            (string)($ingredientRequired[$recipe->ingredient_id] ?? '0'),
+                            $needed, 3
+                        );
                     }
                 }
 
-                // 4. Lock ingredients sorted by ID (deadlock prevention)
+                // 4. Lock ingredients + guard stock
                 if (!empty($ingredientRequired)) {
                     $ingredientIds = collect(array_keys($ingredientRequired))
                         ->sort()->values()->toArray();
@@ -119,14 +134,14 @@ class OrderController extends Controller
 
                         if (!$ingredient) {
                             throw new \DomainException(
-                                "Recipe references a deleted ingredient (id={$ingredientId}). Please update the recipe."
+                                "Рецепт ссылается на удалённый ингредиент (id={$ingredientId}). Обновите рецепт."
                             );
                         }
-                        if ($ingredient->stock < $needed) {
+                        if (bccomp((string)$ingredient->stock, $needed, 3) < 0) {
                             throw new \DomainException(
-                                "Insufficient ingredient: {$ingredient->name}"
-                                . " — need " . round($needed, 3) . " {$ingredient->unit}"
-                                . ", have " . round($ingredient->stock, 3) . " {$ingredient->unit}."
+                                "Недостаточно на складе: {$ingredient->name}"
+                                . " — нужно " . number_format($needed, 3) . " {$ingredient->unit}"
+                                . ", есть " . number_format($ingredient->stock, 3) . " {$ingredient->unit}."
                             );
                         }
                     }
@@ -163,19 +178,27 @@ class OrderController extends Controller
                     Product::where("id", $product->id)->decrement("quantity", $cart->quantity);
                 }
 
-                // 7. Deduct ingredients
+                // 7. Deduct ingredients + log each transaction
                 foreach ($ingredientRequired as $ingredientId => $needed) {
                     Ingredient::where("id", $ingredientId)->decrement("stock", $needed);
+
+                    InventoryTransaction::create([
+                        'ingredient_id'  => $ingredientId,
+                        'type'           => 'consume',
+                        'quantity'       => $needed,
+                        'reference_type' => 'order',
+                        'reference_id'   => $order->id,
+                        'user_id'        => auth()->id(),
+                        'note'           => "Списание по заказу #{$order->id}",
+                    ]);
                 }
 
-                // 8. FIX: Защита от отрицательных финансовых значений
-                // discount не может превышать subtotal → total >= 0 → due >= 0
+                // 8. Финансовые итоги
                 $orderDiscount = min($orderDiscount, $totalAmountOrder);
                 $total         = round($totalAmountOrder - $orderDiscount, 2);
                 $total         = max($total, 0);
-
-                $paid = min(max((float) ($request->paid ?? 0), 0), $total);
-                $due  = max(round($total - $paid, 2), 0);
+                $paid          = min(max((float) ($request->paid ?? 0), 0), $total);
+                $due           = max(round($total - $paid, 2), 0);
 
                 $order->sub_total = $totalAmountOrder;
                 $order->discount  = $orderDiscount;
@@ -202,11 +225,78 @@ class OrderController extends Controller
             return response()->json(["message" => $e->getMessage()], 422);
         } catch (\Throwable $e) {
             return response()->json([
-                "message" => "Order could not be completed due to a server error. Please try again.",
+                "message" => "Не удалось оформить заказ. Попробуйте снова.",
             ], 500);
         }
 
-        return response()->json(["message" => "Order completed successfully", "order" => $order], 200);
+        return response()->json(["message" => "Заказ успешно оформлен", "order" => $order], 200);
+    }
+
+    /**
+     * Отмена заказа: возврат товара + ингредиентов + запись в журнал.
+     */
+    public function cancel(Request $request, $id)
+    {
+        $order = Order::with(['products'])->findOrFail($id);
+
+        if ($order->is_returned) {
+            return response()->json(['message' => 'Заказ уже отменён.'], 422);
+        }
+
+        try {
+            DB::transaction(function () use ($order) {
+
+                // 1. Lock order
+                $order = Order::where('id', $order->id)->lockForUpdate()->firstOrFail();
+
+                // 2. Collect ingredient restore requirements
+                $ingredientRestore = [];
+                foreach ($order->products as $item) {
+                    // Restore product stock
+                    Product::where('id', $item->product_id)->increment('quantity', $item->quantity);
+
+                    // Collect ingredients
+                    $recipes = Recipe::where('product_id', $item->product_id)->get();
+                    foreach ($recipes as $recipe) {
+                        $qty = bcmul((string)$recipe->quantity, (string)$item->quantity, 3);
+                        $ingredientRestore[$recipe->ingredient_id] = bcadd(
+                            (string)($ingredientRestore[$recipe->ingredient_id] ?? '0'),
+                            $qty, 3
+                        );
+                    }
+                }
+
+                // 3. Lock ingredients sorted by ID (deadlock prevention)
+                if (!empty($ingredientRestore)) {
+                    $ingredientIds = collect(array_keys($ingredientRestore))->sort()->values()->toArray();
+                    Ingredient::whereIn('id', $ingredientIds)->orderBy('id')->lockForUpdate()->get();
+                }
+
+                // 4. Restore ingredients + log
+                foreach ($ingredientRestore as $ingredientId => $qty) {
+                    Ingredient::where('id', $ingredientId)->increment('stock', $qty);
+
+                    InventoryTransaction::create([
+                        'ingredient_id'  => $ingredientId,
+                        'type'           => 'restore',
+                        'quantity'       => $qty,
+                        'reference_type' => 'order',
+                        'reference_id'   => $order->id,
+                        'user_id'        => auth()->id(),
+                        'note'           => "Возврат по отмене заказа #{$order->id}",
+                    ]);
+                }
+
+                // 5. Mark order as returned/cancelled
+                $order->is_returned = true;
+                $order->status      = 0;
+                $order->save();
+            });
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Ошибка при отмене заказа: ' . $e->getMessage()], 500);
+        }
+
+        return response()->json(['message' => "Заказ #{$id} отменён. Ингредиенты возвращены на склад."]);
     }
 
     public function show(string $id) {}
@@ -232,7 +322,7 @@ class OrderController extends Controller
                     $locked = Order::where("id", $order->id)->lockForUpdate()->firstOrFail();
 
                     if ($data["amount"] > $locked->due) {
-                        throw new \DomainException("Payment amount exceeds the outstanding due.");
+                        throw new \DomainException("Сумма оплаты превышает задолженность.");
                     }
 
                     $locked->due    = round(max($locked->due - $data["amount"], 0), 2);

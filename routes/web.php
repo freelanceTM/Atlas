@@ -68,6 +68,7 @@ Route::prefix("admin")->as("backend.admin.")->middleware(["admin"])->group(funct
     Route::get("orders/pos-invoice/{id}", [OrderController::class, "posInvoice"])->name("orders.pos-invoice");
     Route::get("orders/transactions/{id}", [OrderController::class, "transactions"])->name("orders.transactions");
     Route::match(["get", "post"], "orders/due/collection/{id}", [OrderController::class, "collection"])->name("due.collection");
+    Route::delete("orders/{id}/cancel", [OrderController::class, "cancel"])->name("orders.cancel");
     Route::get("collection/invoice/{id}", [OrderController::class, "collectionInvoice"])->name("collectionInvoice");
     Route::resource("categories", CategoryController::class);
 
@@ -78,6 +79,7 @@ Route::prefix("admin")->as("backend.admin.")->middleware(["admin"])->group(funct
 
     // Ingredients & Recipes
     Route::get("ingredients-report", [IngredientController::class, "report"])->name("ingredients.report");
+    Route::get("inventory/ledger", [IngredientController::class, "ledger"])->name("inventory.ledger");
     Route::match(["get", "post"], "ingredients/{ingredient}/arrival", [IngredientController::class, "arrival"])->name("ingredients.arrival");
     Route::get("products/{product}/recipes", [IngredientController::class, "recipes"])->name("products.recipes");
     Route::post("products/{product}/recipes", [IngredientController::class, "storeRecipe"])->name("products.recipes.store");
