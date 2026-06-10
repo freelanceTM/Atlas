@@ -166,14 +166,133 @@
           </div>
         </div>
         <div class="row">
-          <div class="col-md-6">
+          <div class="col-md-6 d-flex align-items-center gap-2" style="gap:10px;">
             <button type="submit" class="btn bg-gradient-primary">Update</button>
+            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#ingredientsModal">
+              <i class="fas fa-scroll mr-1"></i> Ингредиенты
+              @if($recipes->count())
+                <span class="badge badge-light ml-1">{{ $recipes->count() }}</span>
+              @endif
+            </button>
           </div>
         </div>
       </div>
     </form>
   </div>
 </div>
+
+{{-- ── Модальное окно: управление рецептом ── --}}
+<div class="modal fade" id="ingredientsModal" tabindex="-1" role="dialog" aria-labelledby="ingredientsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#e8724a; color:#fff;">
+        <h5 class="modal-title" id="ingredientsModalLabel">
+          <i class="fas fa-scroll mr-2"></i>
+          Рецепт: <strong>{{ $product->name }}</strong>
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Закрыть">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        {{-- Список текущих ингредиентов --}}
+        <div class="mb-3">
+          <h6 class="font-weight-bold mb-2"><i class="fas fa-list mr-1"></i> Текущий состав рецепта</h6>
+          @if($recipes->isEmpty())
+            <div class="alert alert-info py-2">
+              <i class="fas fa-info-circle mr-1"></i> Рецепт пуст. Добавьте ингредиенты ниже.
+            </div>
+          @else
+            <table class="table table-sm table-bordered mb-0">
+              <thead class="thead-light">
+                <tr>
+                  <th>#</th>
+                  <th>Ингредиент</th>
+                  <th>Количество на 1 порцию</th>
+                  <th>Ед. изм.</th>
+                  <th>Удалить</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach($recipes as $i => $recipe)
+                <tr>
+                  <td>{{ $i + 1 }}</td>
+                  <td><strong>{{ $recipe->ingredient->name }}</strong></td>
+                  <td>{{ number_format($recipe->quantity, 3) }}</td>
+                  <td><span class="badge badge-secondary">{{ $recipe->ingredient->unit }}</span></td>
+                  <td>
+                    <form action="{{ route('backend.admin.recipes.destroy', $recipe->id) }}"
+                          method="POST" style="display:inline;"
+                          onsubmit="return confirm('Удалить этот ингредиент из рецепта?')">
+                      @csrf @method('DELETE')
+                      <button type="submit" class="btn btn-danger btn-xs">
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                @endforeach
+              </tbody>
+            </table>
+          @endif
+        </div>
+
+        <hr>
+
+        {{-- Форма добавления ингредиента --}}
+        <h6 class="font-weight-bold mb-2"><i class="fas fa-plus-circle mr-1" style="color:#e8724a"></i> Добавить / изменить ингредиент</h6>
+
+        @if($ingredients->isEmpty())
+          <div class="alert alert-warning py-2">
+            Ингредиентов нет.
+            <a href="{{ route('backend.admin.ingredients.create') }}" target="_blank">Создать первый</a>.
+          </div>
+        @else
+          <form action="{{ route('backend.admin.products.recipes.store', $product->id) }}" method="POST">
+            @csrf
+            <div class="form-row align-items-end">
+              <div class="form-group col-md-6 mb-2">
+                <label class="font-weight-bold">Ингредиент <span class="text-danger">*</span></label>
+                <select name="ingredient_id" class="form-control" required>
+                  <option value="">— выберите —</option>
+                  @foreach($ingredients as $ingredient)
+                  <option value="{{ $ingredient->id }}">
+                    {{ $ingredient->name }}
+                    ({{ number_format($ingredient->stock, 2) }} {{ $ingredient->unit }} на складе)
+                  </option>
+                  @endforeach
+                </select>
+              </div>
+              <div class="form-group col-md-4 mb-2">
+                <label class="font-weight-bold">Кол-во на 1 ед. <span class="text-danger">*</span></label>
+                <input type="number" name="quantity" step="0.001" min="0.001"
+                       class="form-control" placeholder="Например: 200.000" required>
+                <small class="text-muted">Единица измерения — как у ингредиента</small>
+              </div>
+              <div class="form-group col-md-2 mb-2">
+                <button type="submit" class="btn btn-block" style="background:#e8724a;color:#fff;">
+                  <i class="fas fa-save"></i> Добавить
+                </button>
+              </div>
+            </div>
+            <small class="text-muted">
+              <i class="fas fa-info-circle"></i>
+              Если ингредиент уже в рецепте — количество обновится.
+            </small>
+          </form>
+        @endif
+      </div>
+      <div class="modal-footer justify-content-between">
+        <a href="{{ route('backend.admin.products.recipes', $product->id) }}" class="btn btn-outline-secondary btn-sm" target="_blank">
+          <i class="fas fa-external-link-alt"></i> Открыть полную страницу
+        </a>
+        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
 @push('script')
 <script src="{{ asset('js/image-field.js') }}"></script>
