@@ -92,7 +92,7 @@ class PosOrderTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $response->assertJson(['message' => 'Order completed successfully']);
+        $response->assertJson(['message' => 'Заказ успешно оформлен']);
         $this->assertDatabaseCount('orders', 1);
         $order = Order::first();
         $this->assertEquals($this->customer->id, $order->customer_id);
@@ -274,7 +274,7 @@ class PosOrderTest extends TestCase
             'paid' => 500,
         ]);
         $response->assertStatus(422);
-        $this->assertStringContainsString('Insufficient product stock', $response->json('message'));
+        $this->assertStringContainsString('Недостаточно товара', $response->json('message'));
         $this->assertDatabaseCount('orders', 0);
     }
 
@@ -292,7 +292,7 @@ class PosOrderTest extends TestCase
             'paid' => 200,
         ]);
         $response->assertStatus(422);
-        $this->assertStringContainsString('Insufficient ingredient', $response->json('message'));
+        $this->assertStringContainsString('Недостаточно на складе', $response->json('message'));
         $this->assertDatabaseCount('orders', 0);
     }
 
@@ -466,7 +466,7 @@ class PosOrderTest extends TestCase
             'paid' => 100,
         ]);
         $response->assertStatus(422);
-        $this->assertSame('Cart is empty.', $response->json('message'));
+        $this->assertSame('Корзина пуста.', $response->json('message'));
     }
 
     /** @test */
