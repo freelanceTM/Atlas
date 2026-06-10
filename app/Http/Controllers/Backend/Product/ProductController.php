@@ -10,7 +10,9 @@ use App\Http\Resources\ProductResource;
 use App\Imports\ProductsImport;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\Ingredient;
 use App\Models\Product;
+use App\Models\Recipe;
 use App\Models\Unit;
 use App\Trait\FileHandler;
 use Illuminate\Http\Request;
@@ -151,7 +153,9 @@ class ProductController extends Controller
         $brands = Brand::whereStatus(true)->get();
         $categories = Category::whereStatus(true)->get();
         $units = Unit::all();
-        return view('backend.products.edit', compact('brands', 'categories', 'units', 'product'));
+        $recipes = Recipe::with('ingredient')->where('product_id', $product->id)->get();
+        $ingredients = Ingredient::orderBy('name')->get();
+        return view('backend.products.edit', compact('brands', 'categories', 'units', 'product', 'recipes', 'ingredients'));
     }
 
     /**
