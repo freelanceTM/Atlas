@@ -137,10 +137,18 @@
           {{-- Submit --}}
           <div class="atlas-form-actions">
             <a href="{{ route('backend.admin.products.index') }}" class="btn atlas-btn-secondary">Отмена</a>
+            <button type="button" class="btn" style="background:#e8724a;color:#fff;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:600;opacity:.65;cursor:not-allowed;" disabled
+                    title="Сначала сохраните товар, затем откройте его для редактирования — кнопка «Ингредиенты» появится там.">
+              <i class="fas fa-scroll mr-1"></i> Ингредиенты
+            </button>
             <button type="submit" class="btn atlas-btn-primary">
               <i class="fas fa-save mr-1"></i> Создать товар
             </button>
           </div>
+          <p class="text-muted mt-2 mb-0" style="font-size:12px;">
+            <i class="fas fa-info-circle"></i>
+            После сохранения товара кнопка «Ингредиенты» появится на странице редактирования.
+          </p>
 
         </form>
       </div>
